@@ -5,13 +5,31 @@ import Link from "next/link";
 import { Rocket, Sparkles, Menu, X, Clock } from "lucide-react";
 
 export function Navbar({ nextLaunch = null }) {
+  const [visible, setVisible] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    let lastScrollY = window.scrollY;
+
     const handleScroll = () => {
-      setScrolled(window.scrollY > 40);
+      const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 40);
+
+      // Hidden when at the top hero section
+      if (currentScrollY <= 80) {
+        setVisible(false);
+      } else if (currentScrollY > lastScrollY) {
+        // Scrolling DOWN ("kindhi vachethapudu okate chupiyali") -> reveal navbar
+        setVisible(true);
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling UP ("paiki scrool chesethapudu kanipinchakudadhu") -> hide navbar
+        setVisible(false);
+      }
+
+      lastScrollY = currentScrollY;
     };
+
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -27,7 +45,11 @@ export function Navbar({ nextLaunch = null }) {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 transform ${
+        visible || mobileMenuOpen
+          ? "translate-y-0 opacity-100 pointer-events-auto"
+          : "-translate-y-full opacity-0 pointer-events-none"
+      } ${
         scrolled
           ? "bg-[#070910]/85 backdrop-blur-md border-b border-[rgba(180,210,235,0.13)] py-3 shadow-2xl"
           : "bg-transparent py-5"
@@ -48,7 +70,7 @@ export function Navbar({ nextLaunch = null }) {
                 ROCKET<span className="text-[#65F6FF]">LAUNCH</span>
               </span>
               <span className="text-[10px] tracking-widest text-[#9AA9BD] uppercase font-mono block mt-0.5">
-                Flight Telemetry
+                Orbital Operations
               </span>
             </div>
           </Link>

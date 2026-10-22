@@ -37,22 +37,6 @@ export function RocketLaunchSequence({ onProgress = null, children }) {
 
     ctx.clearRect(0, 0, cw, ch);
     ctx.drawImage(img, offsetX, offsetY, renderW, renderH);
-
-    // Subtle edge vignette to blend seamlessly into deep space obsidian (#070910)
-    const gradient = ctx.createRadialGradient(
-      cw / 2,
-      ch / 2,
-      Math.min(cw, ch) * 0.4,
-      cw / 2,
-      ch / 2,
-      Math.max(cw, ch) * 0.75
-    );
-    gradient.addColorStop(0, "rgba(7, 9, 16, 0)");
-    gradient.addColorStop(0.8, "rgba(7, 9, 16, 0.4)");
-    gradient.addColorStop(1, "rgba(7, 9, 16, 0.95)");
-
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, cw, ch);
   }, []);
 
   // Preload and cache frames progressively in batches
@@ -219,15 +203,18 @@ export function RocketLaunchSequence({ onProgress = null, children }) {
   return (
     <div ref={containerRef} className="relative w-full h-[320vh]">
       <div className="sticky top-0 w-full h-screen overflow-hidden bg-[#070910]">
-        {/* Full-screen Canvas */}
+        {/* Full-screen Canvas with enhanced visual brightness & contrast */}
         <canvas
           ref={canvasRef}
           className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
-          style={{ opacity: canvasReady ? 1 : 0 }}
+          style={{
+            opacity: canvasReady ? 1 : 0,
+            filter: "brightness(1.22) contrast(1.06) saturate(1.05)",
+          }}
         />
 
-        {/* Ambient Cosmic Lighting */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#070910] via-transparent to-[#070910]/70 pointer-events-none" />
+        {/* Soft bottom edge transition to next dark section */}
+        <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-[#070910] to-transparent pointer-events-none" />
 
         {/* Floating Viewport Content (Overlay UI) */}
         {children}
