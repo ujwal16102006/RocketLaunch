@@ -2,20 +2,20 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useFrameDiscovery } from "@/hooks/useFrameDiscovery.js";
-import { Sparkles, ArrowDown } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
-export function RocketLaunchSequence({ onScrollProgress = null }) {
+export function RocketLaunchSequence({ onProgress = null, children }) {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const imageCacheRef = useRef(new Map());
   const rafIdRef = useRef(null);
-  const currentFrameIndexRef = useRef(0);
+  const currentFrameRef = useRef(0);
+  const targetFrameRef = useRef(0);
 
-  const { frames, count, available, loading, firstFrame } = useFrameDiscovery();
-  const [loadedFrameCount, setLoadedFrameCount] = useState(0);
+  const { frames, count, available, loading } = useFrameDiscovery();
   const [canvasReady, setCanvasReady] = useState(false);
 
-  // Draw a specific frame to canvas
+  // High-performance canvas draw with smooth cover aspect ratio
   const drawFrame = useCallback((img) => {
     const canvas = canvasRef.current;
     if (!canvas || !img || !img.complete || img.naturalWidth === 0) return;
@@ -25,30 +25,37 @@ export function RocketLaunchSequence({ onScrollProgress = null }) {
 
     const cw = canvas.width;
     const ch = canvas.height;
+
+    // Cover aspect-fill calculation for full-screen immersive visuals
+    const imgW = img.naturalWidth;
+    const imgH = img.naturalHeight;
+    const scale = Math.max(cw / imgW, ch / imgH);
+    const renderW = imgW * scale;
+    const renderH = imgH * scale;
+    const offsetX = (cw - renderW) / 2;
+    const offsetY = (ch - renderH) / 2;
+
     ctx.clearRect(0, 0, cw, ch);
-
-    // Compute aspect-fit dimensions (contain)
-    const imgRatio = img.naturalWidth / img.naturalHeight;
-    const canvasRatio = cw / ch;
-
-    let renderW, renderH, offsetX, offsetY;
-
-    if (canvasRatio > imgRatio) {
-      renderH = ch;
-      renderW = ch * imgRatio;
-      offsetX = (cw - renderW) / 2;
-      offsetY = 0;
-    } else {
-      renderW = cw;
-      renderH = cw / imgRatio;
-      offsetX = 0;
-      offsetY = (ch - renderH) / 2;
-    }
-
     ctx.drawImage(img, offsetX, offsetY, renderW, renderH);
+
+    // Subtle edge vignette to blend seamlessly into deep space obsidian (#070910)
+    const gradient = ctx.createRadialGradient(
+      cw / 2,
+      ch / 2,
+      Math.min(cw, ch) * 0.4,
+      cw / 2,
+      ch / 2,
+      Math.max(cw, ch) * 0.75
+    );
+    gradient.addColorStop(0, "rgba(7, 9, 16, 0)");
+    gradient.addColorStop(0.8, "rgba(7, 9, 16, 0.4)");
+    gradient.addColorStop(1, "rgba(7, 9, 16, 0.95)");
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, cw, ch);
   }, []);
 
-  // Preload and cache frames progressively
+  // Preload and cache frames progressively in batches
   useEffect(() => {
     if (!frames || frames.length === 0) return;
 
@@ -60,18 +67,16 @@ export function RocketLaunchSequence({ onScrollProgress = null }) {
     img0.onload = () => {
       if (!isCancelled) {
         imageCacheRef.current.set(0, img0);
-        setLoadedFrameCount((prev) => Math.max(prev, 1));
         drawFrame(img0);
         setCanvasReady(true);
       }
     };
 
-    // Load remaining frames in batches
+    // Load nearby and remaining frames in non-blocking batches
     const loadBatch = (startIndex, batchSize) => {
       if (isCancelled || startIndex >= frames.length) return;
 
       const endIndex = Math.min(startIndex + batchSize, frames.length);
-      let batchLoaded = 0;
 
       for (let i = startIndex; i < endIndex; i++) {
         if (imageCacheRef.current.has(i)) continue;
@@ -81,18 +86,13 @@ export function RocketLaunchSequence({ onScrollProgress = null }) {
         img.onload = () => {
           if (!isCancelled) {
             imageCacheRef.current.set(i, img);
-            batchLoaded++;
-            if (batchLoaded % 10 === 0 || i === frames.length - 1) {
-              setLoadedFrameCount(imageCacheRef.current.size);
-            }
           }
         };
       }
 
-      // Schedule next batch
       setTimeout(() => {
         loadBatch(endIndex, batchSize);
-      }, 50);
+      }, 40);
     };
 
     loadBatch(1, 15);
@@ -102,23 +102,21 @@ export function RocketLaunchSequence({ onScrollProgress = null }) {
     };
   }, [frames, drawFrame]);
 
-  // Handle high-DPI canvas resizing
+  // Handle canvas sizing with high-DPI sharpness
   useEffect(() => {
     const handleResize = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const rect = canvas.getBoundingClientRect();
-      const targetW = Math.floor(rect.width * dpr);
-      const targetH = Math.floor(rect.height * dpr);
+      const w = window.innerWidth;
+      const h = window.innerHeight;
 
-      if (canvas.width !== targetW || canvas.height !== targetH) {
-        canvas.width = targetW;
-        canvas.height = targetH;
-        // Redraw current frame
-        const currentImg = imageCacheRef.current.get(currentFrameIndexRef.current);
-        if (currentImg) drawFrame(currentImg);
+      if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        const img = imageCacheRef.current.get(Math.round(currentFrameRef.current));
+        if (img) drawFrame(img);
       }
     };
 
@@ -127,109 +125,125 @@ export function RocketLaunchSequence({ onScrollProgress = null }) {
     return () => window.removeEventListener("resize", handleResize);
   }, [drawFrame]);
 
-  // Scroll position to frame mapping
+  // Smooth frame interpolation loop (Lerp for buttery fluid motion)
+  useEffect(() => {
+    let animId;
+
+    const renderLoop = () => {
+      const current = currentFrameRef.current;
+      const target = targetFrameRef.current;
+      const diff = target - current;
+
+      if (Math.abs(diff) > 0.05) {
+        // Smooth lerp interpolation factor 0.18
+        currentFrameRef.current = current + diff * 0.18;
+        const frameIdx = Math.min(
+          Math.max(Math.round(currentFrameRef.current), 0),
+          (frames?.length || 1) - 1
+        );
+
+        // Find nearest loaded cached image
+        let img = imageCacheRef.current.get(frameIdx);
+        if (!img) {
+          for (let offset = 1; offset < 25; offset++) {
+            if (imageCacheRef.current.has(frameIdx - offset)) {
+              img = imageCacheRef.current.get(frameIdx - offset);
+              break;
+            }
+            if (imageCacheRef.current.has(frameIdx + offset)) {
+              img = imageCacheRef.current.get(frameIdx + offset);
+              break;
+            }
+          }
+        }
+
+        if (img) drawFrame(img);
+      }
+
+      animId = requestAnimationFrame(renderLoop);
+    };
+
+    animId = requestAnimationFrame(renderLoop);
+    return () => cancelAnimationFrame(animId);
+  }, [frames, drawFrame]);
+
+  // Map scroll position smoothly to target frame index & flight telemetry
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !frames || frames.length === 0) return;
 
     const handleScroll = () => {
-      if (rafIdRef.current) return;
+      const rect = container.getBoundingClientRect();
+      const totalScrollable = rect.height - window.innerHeight;
+      if (totalScrollable <= 0) return;
 
-      rafIdRef.current = requestAnimationFrame(() => {
-        rafIdRef.current = null;
-        if (!container) return;
+      const scrolled = -rect.top;
+      const progress = Math.min(Math.max(scrolled / totalScrollable, 0), 1);
 
-        const rect = container.getBoundingClientRect();
-        const totalScrollable = rect.height - window.innerHeight;
+      const totalFrames = frames.length;
+      targetFrameRef.current = Math.min(progress * (totalFrames - 1), totalFrames - 1);
 
-        if (totalScrollable <= 0) return;
+      // Notify parent of flight telemetry (without technical frame debug words)
+      if (onProgress) {
+        const totalSecs = Math.floor(progress * 168);
+        const mins = Math.floor(totalSecs / 60);
+        const secs = totalSecs % 60;
+        const missionClock = `T+ 0${mins}:${secs < 10 ? "0" : ""}${secs}`;
 
-        const scrolled = -rect.top;
-        const progress = Math.min(Math.max(scrolled / totalScrollable, 0), 1);
+        const altitudeKm = (Math.pow(progress, 1.8) * 168.4).toFixed(1);
+        const velocityKmh = Math.round(Math.pow(progress, 1.5) * 27450);
 
-        if (onScrollProgress) onScrollProgress(progress);
+        let phase = "PAD LIFTOFF & TOWER CLEARANCE";
+        if (progress > 0.12 && progress <= 0.35) phase = "TRANSONIC ACCELERATION";
+        else if (progress > 0.35 && progress <= 0.6) phase = "MAX-Q (MAX DYNAMIC PRESSURE)";
+        else if (progress > 0.6 && progress <= 0.85) phase = "STAGE 1 MAIN ENGINE PROPULSION";
+        else if (progress > 0.85 && progress <= 0.95) phase = "MECO (MAIN ENGINE CUTOFF)";
+        else if (progress > 0.95) phase = "STAGE SEPARATION & ORBIT INSERTION";
 
-        const totalFrames = frames.length;
-        const frameIndex = Math.min(Math.floor(progress * totalFrames), totalFrames - 1);
-
-        if (frameIndex !== currentFrameIndexRef.current) {
-          currentFrameIndexRef.current = frameIndex;
-
-          // Find the closest available cached frame if target frame is still loading
-          let renderImg = imageCacheRef.current.get(frameIndex);
-          if (!renderImg) {
-            for (let offset = 1; offset < 20; offset++) {
-              if (imageCacheRef.current.has(frameIndex - offset)) {
-                renderImg = imageCacheRef.current.get(frameIndex - offset);
-                break;
-              }
-              if (imageCacheRef.current.has(frameIndex + offset)) {
-                renderImg = imageCacheRef.current.get(frameIndex + offset);
-                break;
-              }
-            }
-          }
-
-          if (renderImg) {
-            drawFrame(renderImg);
-          }
-        }
-      });
+        onProgress({
+          progress,
+          missionClock,
+          altitudeKm,
+          velocityKmh,
+          phase,
+        });
+      }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
 
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
-    };
-  }, [frames, onScrollProgress, drawFrame]);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [frames, onProgress]);
 
   return (
-    <div ref={containerRef} className="relative w-full h-[220vh]">
-      <div className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center bg-[#070910]">
-        {/* Background cosmic illumination */}
-        <div className="absolute inset-0 bg-radial-gradient from-[#101C2D]/40 via-transparent to-[#070910] pointer-events-none" />
-
-        {/* Cinematic Canvas */}
+    <div ref={containerRef} className="relative w-full h-[320vh]">
+      <div className="sticky top-0 w-full h-screen overflow-hidden bg-[#070910]">
+        {/* Full-screen Canvas */}
         <canvas
           ref={canvasRef}
-          className="relative z-10 w-full h-full max-h-[92vh] max-w-[1400px] object-contain transition-opacity duration-700"
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
           style={{ opacity: canvasReady ? 1 : 0 }}
         />
 
-        {/* Procedural Visual Fallback (if no frames discovered) */}
+        {/* Ambient Cosmic Lighting */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#070910] via-transparent to-[#070910]/70 pointer-events-none" />
+
+        {/* Floating Viewport Content (Overlay UI) */}
+        {children}
+
+        {/* Procedural Fallback if assets missing */}
         {!available && !loading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10">
             <div className="w-24 h-24 rounded-full bg-[#65F6FF]/10 border border-[#65F6FF]/30 flex items-center justify-center mb-6 animate-pulse">
               <Sparkles className="w-10 h-10 text-[#65F6FF]" />
             </div>
-            <h3 className="text-2xl font-bold text-[#F3F7FC] mb-2">Flight Trajectory Vector</h3>
+            <h3 className="text-2xl font-bold text-[#F3F7FC] mb-2">Orbital Telemetry Stream Active</h3>
             <p className="text-sm text-[#9AA9BD] max-w-md">
-              Orbital launch simulation sequence active. Discovered frame manifest is synchronizing with aerospace data.
+              Synchronizing launch ascent vector with live aerospace tracking systems.
             </p>
           </div>
         )}
-
-        {/* Subtle Frame Sequence Progress Indicator */}
-        {available && count > 0 && (
-          <div className="absolute bottom-8 right-8 z-20 flex items-center gap-3 px-3 py-1.5 rounded-full bg-[#101C2D]/80 border border-[rgba(180,210,235,0.15)] backdrop-blur-md text-[11px] font-mono text-[#9AA9BD]">
-            <span className="w-2 h-2 rounded-full bg-[#65F6FF] animate-pulse"></span>
-            <span>
-              SEQUENCE: {currentFrameIndexRef.current + 1} / {count} FRAMES
-            </span>
-            {loadedFrameCount < count && (
-              <span className="text-[#FFB45C]">({Math.round((loadedFrameCount / count) * 100)}% buffered)</span>
-            )}
-          </div>
-        )}
-
-        {/* Scroll Prompt */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 text-xs font-mono tracking-widest text-[#9AA9BD] animate-bounce pointer-events-none">
-          <span>SCROLL TO LAUNCH</span>
-          <ArrowDown className="w-4 h-4 text-[#65F6FF]" />
-        </div>
       </div>
     </div>
   );
