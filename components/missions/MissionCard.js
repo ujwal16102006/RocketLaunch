@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { formatUtcDateTime } from "@/utils/dateUtils.js";
+import { formatUtcDateTime, padZero } from "@/utils/dateUtils.js";
+import { useCountdown } from "@/hooks/useCountdown.js";
 import { useFavorites } from "@/hooks/useFavorites.js";
 import { Badge } from "@/components/ui/Badge.js";
-import { Rocket, MapPin, Calendar, Heart, Info, Sparkles, Orbit } from "lucide-react";
+import { Rocket, MapPin, Calendar, Heart, Info, Sparkles, Orbit, Clock } from "lucide-react";
 
 export function MissionCard({ launch, onSelectLaunch = null, onAskAi = null }) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const [imageError, setImageError] = useState(false);
+  const countdown = useCountdown(launch?.net);
 
   if (!launch) return null;
 
@@ -80,13 +82,53 @@ export function MissionCard({ launch, onSelectLaunch = null, onAskAi = null }) {
           </h3>
 
           {/* Launch Vehicle */}
-          <p className="text-xs text-[#9AA9BD] mb-4 flex items-center gap-1.5 font-medium">
+          <p className="text-xs text-[#9AA9BD] mb-3 flex items-center gap-1.5 font-medium">
             <Rocket className="w-3.5 h-3.5 text-[#65F6FF]" />
             <span>{launch.rocket?.name}</span>
           </p>
 
+          {/* Live Mission Ticker / Real-time Countdown for Every Launch */}
+          <div className="mb-3.5 p-2.5 rounded-xl bg-[#090F1B] border border-[#65F6FF]/20 shadow-inner">
+            <div className="flex items-center justify-between mb-1.5 text-[10px] font-mono">
+              <span className="flex items-center gap-1.5 text-[#65F6FF] font-semibold">
+                <span className={`w-1.5 h-1.5 rounded-full ${countdown.isPast ? "bg-[#FFB45C]" : "bg-[#65F6FF] animate-ping"}`} />
+                {countdown.isPast ? "MISSION ELAPSED" : "T-MINUS COUNTDOWN"}
+              </span>
+              <span className="text-[10px] text-[#9AA9BD] flex items-center gap-1">
+                <Clock className="w-3 h-3 text-[#65F6FF]" />
+                LIVE
+              </span>
+            </div>
+
+            {countdown.isPast ? (
+              <div className="flex items-center justify-between font-mono text-xs text-[#FFB45C] font-semibold py-1 px-2 rounded bg-[#101C2D]">
+                <span>{countdown.formatted || "T+ COMPLETED"}</span>
+                <span className="text-[10px] text-[#9AA9BD]">CONCLUDED</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 gap-1 text-center font-mono">
+                <div className="bg-[#101C2D] py-1 rounded border border-[rgba(101,246,255,0.15)]">
+                  <div className="text-sm font-bold text-[#F3F7FC] tabular-nums">{padZero(countdown.days)}</div>
+                  <div className="text-[9px] text-[#9AA9BD] uppercase font-sans">Days</div>
+                </div>
+                <div className="bg-[#101C2D] py-1 rounded border border-[rgba(101,246,255,0.15)]">
+                  <div className="text-sm font-bold text-[#F3F7FC] tabular-nums">{padZero(countdown.hours)}</div>
+                  <div className="text-[9px] text-[#9AA9BD] uppercase font-sans">Hrs</div>
+                </div>
+                <div className="bg-[#101C2D] py-1 rounded border border-[rgba(101,246,255,0.15)]">
+                  <div className="text-sm font-bold text-[#65F6FF] tabular-nums">{padZero(countdown.minutes)}</div>
+                  <div className="text-[9px] text-[#9AA9BD] uppercase font-sans">Mins</div>
+                </div>
+                <div className="bg-[#101C2D] py-1 rounded border border-[#65F6FF]/35 shadow-[0_0_8px_rgba(101,246,255,0.25)]">
+                  <div className="text-sm font-bold text-[#65F6FF] tabular-nums animate-pulse">{padZero(countdown.seconds)}</div>
+                  <div className="text-[9px] text-[#65F6FF] uppercase font-sans">Secs</div>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Spaceport & Date */}
-          <div className="space-y-1.5 text-xs text-[#9AA9BD]/80 border-t border-[rgba(180,210,235,0.08)] pt-3 mb-4">
+          <div className="space-y-1.5 text-xs text-[#9AA9BD]/80 border-t border-[rgba(180,210,235,0.08)] pt-2.5 mb-4">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-[#9AA9BD]" />
               <span className="font-mono text-[11px]">{formatUtcDateTime(launch.net)}</span>

@@ -1,16 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --color-obsidian: #070910;
-  --color-space-navy: #0B1424;
-  --color-panel-navy: #101C2D;
-  --color-panel-elevated: #162438;
-  --color-cyan: #65F6FF;
+  --color-obsidian: #060812;
+  --color-space-navy: #0B1426;
+  --color-panel-navy: #0F1A2E;
+  --color-panel-elevated: #152238;
+  --color-cyan: #00F0FF;
+  --color-cyan-glow: #65F6FF;
   --color-amber: #FFB45C;
+  --color-amber-hot: #FF9E2C;
+  --color-purple: #A78BFA;
   --color-ice-white: #F3F7FC;
   --color-muted-silver: #9AA9BD;
-  --color-border: rgba(180, 210, 235, 0.13);
-  --color-border-glow: rgba(101, 246, 255, 0.3);
+  --color-border: rgba(101, 246, 255, 0.15);
+  --color-border-glow: rgba(101, 246, 255, 0.35);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
@@ -25,27 +28,27 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at 50% 0%, #0d1a33 0%, #070910 70%);
+  background: radial-gradient(circle at 50% 0%, #0d1e3a 0%, #080f1e 35%, #060812 75%);
   color: var(--color-ice-white);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Glassmorphism panels */
+/* Glassmorphism panels with vibrant cosmic tint */
 .glass-panel {
-  background: rgba(16, 28, 45, 0.75);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid var(--color-border);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  background: rgba(14, 24, 42, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(101, 246, 255, 0.14);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
 }
 
 .glass-panel-elevated {
-  background: rgba(22, 36, 56, 0.85);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(101, 246, 255, 0.18);
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5), 0 0 25px rgba(101, 246, 255, 0.08);
+  background: rgba(19, 32, 54, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(101, 246, 255, 0.22);
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.55), 0 0 25px rgba(101, 246, 255, 0.1);
 }
 
 /* Monospace numerals */
@@ -57,26 +60,37 @@ body {
 
 /* Atmospheric glow */
 .cyan-glow {
-  text-shadow: 0 0 15px rgba(101, 246, 255, 0.5);
+  text-shadow: 0 0 16px rgba(101, 246, 255, 0.55);
 }
 
 .amber-glow {
-  text-shadow: 0 0 15px rgba(255, 180, 92, 0.5);
+  text-shadow: 0 0 16px rgba(255, 180, 92, 0.55);
 }
 
 .box-cyan-glow {
-  box-shadow: 0 0 20px rgba(101, 246, 255, 0.25);
+  box-shadow: 0 0 25px rgba(101, 246, 255, 0.25);
 }
 
 .box-amber-glow {
-  box-shadow: 0 0 20px rgba(255, 180, 92, 0.25);
+  box-shadow: 0 0 25px rgba(255, 180, 92, 0.25);
 }
 
 /* Subtle starry background grid */
 .space-grid-bg {
-  background-image: linear-gradient(to right, rgba(180, 210, 235, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(180, 210, 235, 0.04) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(101, 246, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(101, 246, 255, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Pulse shimmer effect */
+@keyframes cosmic-pulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+.animate-cosmic {
+  animation: cosmic-pulse 4s ease-in-out infinite;
 }
 
 /* Reduced motion preference support */
@@ -95,12 +109,14 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #070910;
+  background: #060812;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1c2c44;
+  background: #17263c;
   border-radius: 4px;
+  border: 1px solid rgba(101, 246, 255, 0.15);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #65F6FF;
+  background: #223755;
+  border-color: rgba(101, 246, 255, 0.35);
 }

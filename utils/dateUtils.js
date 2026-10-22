@@ -131,3 +131,44 @@ export function formatLocalDateTime(isoString) {
     return "TBD";
   }
 }
+
+/**
+ * Calculates elapsed time from a past launch timestamp with live precision.
+ */
+export function calculateElapsedTime(isoString, now = Date.now()) {
+  if (!isoString) return null;
+  const targetEpoch = new Date(isoString).getTime();
+  if (isNaN(targetEpoch)) return null;
+
+  const diffMs = now - targetEpoch;
+  if (diffMs < 0) return null;
+
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  let friendly = "";
+  if (days > 365) {
+    const years = (days / 365.25).toFixed(1);
+    friendly = `${years}y ago`;
+  } else if (days > 0) {
+    friendly = `${days}d ${hours}h ago`;
+  } else if (hours > 0) {
+    friendly = `${hours}h ${minutes}m ago`;
+  } else {
+    friendly = `${minutes}m ${seconds}s ago`;
+  }
+
+  return {
+    days,
+    hours,
+    minutes,
+    seconds,
+    totalSeconds,
+    formatted: `T+ ${padZero(days)}d : ${padZero(hours)}h : ${padZero(minutes)}m : ${padZero(seconds)}s`,
+    friendly,
+  };
+}
+

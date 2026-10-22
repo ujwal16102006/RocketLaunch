@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatUtcDateTime, formatLocalDateTime } from "@/utils/dateUtils.js";
+import { formatUtcDateTime, formatLocalDateTime, padZero } from "@/utils/dateUtils.js";
+import { useCountdown } from "@/hooks/useCountdown.js";
 import { useFavorites } from "@/hooks/useFavorites.js";
 import { Badge } from "@/components/ui/Badge.js";
 import {
@@ -16,6 +17,7 @@ import {
   FileText,
   Sparkles,
   Shield,
+  Clock,
 } from "lucide-react";
 
 export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
@@ -23,6 +25,7 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
   const [briefLoading, setBriefLoading] = useState(false);
   const [briefContent, setBriefContent] = useState(null);
   const [briefError, setBriefError] = useState(null);
+  const countdown = useCountdown(launch?.net);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -100,9 +103,49 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
         <h2 id="modal-title" className="text-2xl sm:text-3xl font-extrabold text-[#F3F7FC] tracking-tight mb-2">
           {launch.name}
         </h2>
-        <p className="text-sm text-[#65F6FF] font-mono mb-6">
+        <p className="text-sm text-[#65F6FF] font-mono mb-4">
           {launch.agency?.name} • {launch.agency?.countryCode}
         </p>
+
+        {/* Live Mission Countdown Telemetry */}
+        <div className="mb-6 p-4 rounded-2xl bg-[#090F1B] border border-[#65F6FF]/25 shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="flex items-center gap-2 text-xs font-mono font-semibold text-[#65F6FF]">
+              <span className={`w-2 h-2 rounded-full ${countdown.isPast ? "bg-[#FFB45C]" : "bg-[#65F6FF] animate-ping"}`} />
+              {countdown.isPast ? "MISSION FLIGHT ELAPSED" : "LIVE T-MINUS COUNTDOWN"}
+            </span>
+            <span className="text-xs font-mono text-[#9AA9BD] flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-[#65F6FF]" />
+              {countdown.isPast ? "COMPLETED" : "COUNTING DOWN (1s SYNC)"}
+            </span>
+          </div>
+
+          {countdown.isPast ? (
+            <div className="p-2.5 rounded-xl bg-[#101C2D] font-mono text-sm text-[#FFB45C] font-bold flex items-center justify-between">
+              <span>{countdown.formatted || "T+ CONCLUDED"}</span>
+              <span className="text-xs text-[#9AA9BD]">LAUNCH EXECUTED</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-4 gap-2 text-center font-mono">
+              <div className="bg-[#101C2D] py-2 rounded-xl border border-[rgba(101,246,255,0.15)]">
+                <div className="text-xl sm:text-2xl font-extrabold text-[#F3F7FC] tabular-nums">{padZero(countdown.days)}</div>
+                <div className="text-[10px] text-[#9AA9BD] uppercase font-sans tracking-wider">Days</div>
+              </div>
+              <div className="bg-[#101C2D] py-2 rounded-xl border border-[rgba(101,246,255,0.15)]">
+                <div className="text-xl sm:text-2xl font-extrabold text-[#F3F7FC] tabular-nums">{padZero(countdown.hours)}</div>
+                <div className="text-[10px] text-[#9AA9BD] uppercase font-sans tracking-wider">Hours</div>
+              </div>
+              <div className="bg-[#101C2D] py-2 rounded-xl border border-[rgba(101,246,255,0.15)]">
+                <div className="text-xl sm:text-2xl font-extrabold text-[#65F6FF] tabular-nums">{padZero(countdown.minutes)}</div>
+                <div className="text-[10px] text-[#9AA9BD] uppercase font-sans tracking-wider">Minutes</div>
+              </div>
+              <div className="bg-[#101C2D] py-2 rounded-xl border border-[#65F6FF]/40 shadow-[0_0_12px_rgba(101,246,255,0.25)]">
+                <div className="text-xl sm:text-2xl font-extrabold text-[#65F6FF] tabular-nums animate-pulse">{padZero(countdown.seconds)}</div>
+                <div className="text-[10px] text-[#65F6FF] uppercase font-sans tracking-wider font-semibold">Seconds</div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Flight Parameters Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
