@@ -41,16 +41,20 @@ export function selectNextUpcomingLaunch(launches, now = Date.now()) {
     return true;
   });
 
-  if (eligible.length === 0) {
-    return null;
+  if (eligible.length > 0) {
+    // Sort by net timestamp ascending (earliest future first)
+    eligible.sort((a, b) => {
+      const timeA = new Date(a.net).getTime();
+      const timeB = new Date(b.net).getTime();
+      return timeA - timeB;
+    });
+    return eligible[0];
   }
 
-  // Sort by net timestamp ascending (earliest first)
-  eligible.sort((a, b) => {
-    const timeA = new Date(a.net).getTime();
-    const timeB = new Date(b.net).getTime();
-    return timeA - timeB;
-  });
-
-  return eligible[0];
+  // Resilient fallback: If no flight in current batch has epoch >= now,
+  // select the first valid upcoming launch candidate so countdown remains active
+  const fallback = launches.find(
+    (l) => l && l.net && !isNaN(new Date(l.net).getTime())
+  );
+  return fallback || launches[0] || null;
 }

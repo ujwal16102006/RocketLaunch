@@ -35,7 +35,7 @@ export default function HomePage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/launches?type=upcoming&limit=12");
+      const res = await fetch("/api/launches?type=upcoming&limit=30");
       if (!res.ok) {
         throw new Error(`Aerospace telemetry server returned HTTP ${res.status}`);
       }
@@ -88,6 +88,7 @@ export default function HomePage() {
 
           <LaunchCountdown
             launch={nextLaunch}
+            loading={loading}
             onSelectLaunch={(l) => setActiveModalLaunch(l)}
             onAskAi={(l) => {
               window.location.href = `/ai?missionId=${encodeURIComponent(l.id)}&missionName=${encodeURIComponent(l.name)}`;

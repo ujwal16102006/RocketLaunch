@@ -6,8 +6,30 @@ import { formatUtcDateTime, formatLocalDateTime } from "@/utils/dateUtils.js";
 import { Rocket, MapPin, Calendar, Clock, Info, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/Badge.js";
 
-export function LaunchCountdown({ launch, onSelectLaunch = null, onAskAi = null }) {
+export function LaunchCountdown({ launch, loading = false, onSelectLaunch = null, onAskAi = null }) {
   const countdown = useCountdown(launch?.net);
+
+  if (loading) {
+    return (
+      <div className="glass-panel-elevated rounded-3xl p-8 sm:p-12 max-w-4xl mx-auto border border-[#65F6FF]/20 relative overflow-hidden text-center">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[#101C2D] border border-[#65F6FF]/40 flex items-center justify-center text-[#65F6FF] animate-pulse">
+          <Rocket className="w-8 h-8" />
+        </div>
+        <h3 className="text-xl font-bold text-[#F3F7FC] mb-2 font-mono">Synchronizing Live Master Countdown</h3>
+        <p className="text-sm text-[#9AA9BD] max-w-md mx-auto mb-8 font-light">
+          Acquiring active orbital telemetry vectors from global spaceports...
+        </p>
+        <div className="grid grid-cols-4 gap-2 sm:gap-4 max-w-xl mx-auto opacity-50 animate-pulse">
+          {["DAYS", "HOURS", "MINS", "SECS"].map((u, i) => (
+            <div key={i} className="glass-panel rounded-2xl p-4 text-center border border-[rgba(101,246,255,0.15)]">
+              <span className="font-mono text-3xl sm:text-5xl font-bold text-[#65F6FF]">--</span>
+              <span className="text-[10px] block text-[#9AA9BD] mt-1 font-mono">{u}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!launch) {
     return (
@@ -15,9 +37,9 @@ export function LaunchCountdown({ launch, onSelectLaunch = null, onAskAi = null 
         <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[#101C2D] border border-[rgba(180,210,235,0.15)] flex items-center justify-center text-[#9AA9BD]">
           <Rocket className="w-8 h-8" />
         </div>
-        <h3 className="text-xl font-bold text-[#F3F7FC] mb-2">No Upcoming Flight Detected</h3>
+        <h3 className="text-xl font-bold text-[#F3F7FC] mb-2 font-mono">Connecting to Global Spaceports</h3>
         <p className="text-sm text-[#9AA9BD] max-w-md mx-auto">
-          Currently evaluating flight manifests from global launch operators. Check back shortly for updated launch windows.
+          Synchronizing flight manifest data feeds. Launch windows will appear momentarily.
         </p>
       </div>
     );
