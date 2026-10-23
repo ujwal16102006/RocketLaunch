@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge.js";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const POPULAR_AGENCIES = [
   { id: "ALL", label: "All Agencies" },
@@ -34,6 +35,7 @@ const POPULAR_AGENCIES = [
 ];
 
 export default function UpcomingLaunchesPage() {
+  const router = useRouter();
   const [launches, setLaunches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -357,7 +359,7 @@ export default function UpcomingLaunchesPage() {
                 launch={launch}
                 onSelectLaunch={setActiveModalLaunch}
                 onAskAi={() => {
-                  window.location.href = `/ai?missionId=${encodeURIComponent(launch.id)}&missionName=${encodeURIComponent(launch.name)}`;
+                  router.push(`/ai?missionId=${encodeURIComponent(launch.id)}&missionName=${encodeURIComponent(launch.name)}`);
                 }}
               />
             ))}
@@ -371,7 +373,7 @@ export default function UpcomingLaunchesPage() {
           launch={activeModalLaunch}
           onClose={() => setActiveModalLaunch(null)}
           onAskAi={() => {
-            window.location.href = `/ai?missionId=${encodeURIComponent(activeModalLaunch.id)}&missionName=${encodeURIComponent(activeModalLaunch.name)}`;
+            router.push(`/ai?missionId=${encodeURIComponent(activeModalLaunch.id)}&missionName=${encodeURIComponent(activeModalLaunch.name)}`);
           }}
         />
       )}

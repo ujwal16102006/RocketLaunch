@@ -12,8 +12,29 @@ export function Navbar({ nextLaunch = null }) {
   const [visible, setVisible] = useState(true); // Open cheyane ravali (visible on open)
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [internalNextLaunch, setInternalNextLaunch] = useState(null);
 
-  const countdown = useCountdown(nextLaunch?.net);
+  // If nextLaunch was not passed from page or is still loading, fetch it once
+  useEffect(() => {
+    if (!nextLaunch && !internalNextLaunch) {
+      let isSubscribed = true;
+      fetch("/api/launches?type=upcoming&limit=5")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (isSubscribed && data?.launches?.length > 0) {
+            const next = data.launches.find((l) => l.net && new Date(l.net).getTime() > Date.now()) || data.launches[0];
+            setInternalNextLaunch(next);
+          }
+        })
+        .catch(() => {});
+      return () => {
+        isSubscribed = false;
+      };
+    }
+  }, [nextLaunch, internalNextLaunch]);
+
+  const activeLaunch = nextLaunch || internalNextLaunch;
+  const countdown = useCountdown(activeLaunch?.net);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -132,7 +153,7 @@ export function Navbar({ nextLaunch = null }) {
 
           {/* Right Status Badge with Live Next Launch Countdown */}
           <div className="hidden lg:flex items-center gap-3">
-            {nextLaunch ? (
+            {activeLaunch ? (
               <Link
                 href="/launches"
                 className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#101C2D]/90 border border-[#65F6FF]/35 text-xs text-[#F3F7FC] hover:border-[#65F6FF] hover:shadow-[0_0_15px_rgba(101,246,255,0.25)] transition-all duration-200"
@@ -142,13 +163,13 @@ export function Navbar({ nextLaunch = null }) {
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-[#65F6FF]"></span>
                 </span>
                 <Clock className="w-3.5 h-3.5 text-[#65F6FF]" />
-                <span className="font-mono text-[11px] text-[#65F6FF] font-semibold">
+                <span className="font-mono text-[11px] text-[#65F6FF] font-semibold" suppressHydrationWarning>
                   {countdown.isPast
                     ? "T+ ACTIVE"
                     : `T- ${padZero(countdown.days)}d ${padZero(countdown.hours)}h ${padZero(countdown.minutes)}m ${padZero(countdown.seconds)}s`}
                 </span>
                 <span className="text-[#9AA9BD] text-[10px] hidden xl:inline">
-                  • {nextLaunch.rocket?.name || nextLaunch.name}
+                  • {activeLaunch?.rocket?.name || activeLaunch?.name || "Next Flight"}
                 </span>
               </Link>
             ) : (

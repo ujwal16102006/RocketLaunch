@@ -172,7 +172,7 @@ export default function MissionDossierPage({ params }) {
                 <Calendar className="w-4 h-4 text-[#65F6FF]" />
                 <span className="font-mono text-xs">{formatUtcDateTime(launch.net)}</span>
               </div>
-              <span className="text-xs text-[#9AA9BD] block mt-1 font-mono">
+              <span className="text-xs text-[#9AA9BD] block mt-1 font-mono" suppressHydrationWarning>
                 Local: {formatLocalDateTime(launch.net)}
               </span>
             </div>

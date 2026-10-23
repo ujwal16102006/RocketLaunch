@@ -122,25 +122,25 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
 
           {countdown.isPast ? (
             <div className="p-2.5 rounded-xl bg-[#101C2D] font-mono text-sm text-[#FFB45C] font-bold flex items-center justify-between">
-              <span>{countdown.formatted || "T+ CONCLUDED"}</span>
+              <span suppressHydrationWarning>{countdown.formatted || "T+ CONCLUDED"}</span>
               <span className="text-xs text-[#9AA9BD]">LAUNCH EXECUTED</span>
             </div>
           ) : (
             <div className="grid grid-cols-4 gap-2 text-center font-mono">
               <div className="bg-[#101C2D] py-2 rounded-xl border border-[rgba(101,246,255,0.15)]">
-                <div className="text-xl sm:text-2xl font-extrabold text-[#F3F7FC] tabular-nums">{padZero(countdown.days)}</div>
+                <div className="text-xl sm:text-2xl font-extrabold text-[#F3F7FC] tabular-nums" suppressHydrationWarning>{padZero(countdown.days)}</div>
                 <div className="text-[10px] text-[#9AA9BD] uppercase font-sans tracking-wider">Days</div>
               </div>
               <div className="bg-[#101C2D] py-2 rounded-xl border border-[rgba(101,246,255,0.15)]">
-                <div className="text-xl sm:text-2xl font-extrabold text-[#F3F7FC] tabular-nums">{padZero(countdown.hours)}</div>
+                <div className="text-xl sm:text-2xl font-extrabold text-[#F3F7FC] tabular-nums" suppressHydrationWarning>{padZero(countdown.hours)}</div>
                 <div className="text-[10px] text-[#9AA9BD] uppercase font-sans tracking-wider">Hours</div>
               </div>
               <div className="bg-[#101C2D] py-2 rounded-xl border border-[rgba(101,246,255,0.15)]">
-                <div className="text-xl sm:text-2xl font-extrabold text-[#65F6FF] tabular-nums">{padZero(countdown.minutes)}</div>
+                <div className="text-xl sm:text-2xl font-extrabold text-[#65F6FF] tabular-nums" suppressHydrationWarning>{padZero(countdown.minutes)}</div>
                 <div className="text-[10px] text-[#9AA9BD] uppercase font-sans tracking-wider">Minutes</div>
               </div>
               <div className="bg-[#101C2D] py-2 rounded-xl border border-[#65F6FF]/40 shadow-[0_0_12px_rgba(101,246,255,0.25)]">
-                <div className="text-xl sm:text-2xl font-extrabold text-[#65F6FF] tabular-nums animate-pulse">{padZero(countdown.seconds)}</div>
+                <div className="text-xl sm:text-2xl font-extrabold text-[#65F6FF] tabular-nums animate-pulse" suppressHydrationWarning>{padZero(countdown.seconds)}</div>
                 <div className="text-[10px] text-[#65F6FF] uppercase font-sans tracking-wider font-semibold">Seconds</div>
               </div>
             </div>
@@ -177,7 +177,7 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
               <Calendar className="w-4 h-4 text-[#65F6FF]" />
               <span className="font-mono text-xs">{formatUtcDateTime(launch.net)}</span>
             </div>
-            <span className="text-xs text-[#9AA9BD] block mt-0.5 font-mono">
+            <span className="text-xs text-[#9AA9BD] block mt-0.5 font-mono" suppressHydrationWarning>
               Local: {formatLocalDateTime(launch.net)}
             </span>
           </div>

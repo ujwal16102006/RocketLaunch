@@ -29,6 +29,7 @@ export function CountdownDigits({
           }`}
         >
           <span
+            suppressHydrationWarning
             className={`font-mono-numbers text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight ${
               isPast
                 ? "text-[#9AA9BD]"

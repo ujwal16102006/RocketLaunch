@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar.js";
 import { Footer } from "@/components/layout/Footer.js";
 import { CinematicHero } from "@/components/hero/CinematicHero.js";
@@ -24,6 +25,7 @@ import {
 import { Badge } from "@/components/ui/Badge.js";
 
 export default function HomePage() {
+  const router = useRouter();
   const [launches, setLaunches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -91,7 +93,7 @@ export default function HomePage() {
             loading={loading}
             onSelectLaunch={(l) => setActiveModalLaunch(l)}
             onAskAi={(l) => {
-              window.location.href = `/ai?missionId=${encodeURIComponent(l.id)}&missionName=${encodeURIComponent(l.name)}`;
+              router.push(`/ai?missionId=${encodeURIComponent(l.id)}&missionName=${encodeURIComponent(l.name)}`);
             }}
           />
         </section>
@@ -232,7 +234,7 @@ export default function HomePage() {
                   launch={launch}
                   onSelectLaunch={(l) => setActiveModalLaunch(l)}
                   onAskAi={() => {
-                    window.location.href = `/ai?missionId=${encodeURIComponent(launch.id)}&missionName=${encodeURIComponent(launch.name)}`;
+                    router.push(`/ai?missionId=${encodeURIComponent(launch.id)}&missionName=${encodeURIComponent(launch.name)}`);
                   }}
                 />
               ))}
@@ -247,7 +249,7 @@ export default function HomePage() {
           launch={activeModalLaunch}
           onClose={() => setActiveModalLaunch(null)}
           onAskAi={() => {
-            window.location.href = `/ai?missionId=${encodeURIComponent(activeModalLaunch.id)}&missionName=${encodeURIComponent(activeModalLaunch.name)}`;
+            router.push(`/ai?missionId=${encodeURIComponent(activeModalLaunch.id)}&missionName=${encodeURIComponent(activeModalLaunch.name)}`);
           }}
         />
       )}

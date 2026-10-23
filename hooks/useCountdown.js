@@ -10,6 +10,7 @@ import { calculateCountdown } from "@/utils/dateUtils.js";
  * @returns {object} Live countdown status
  */
 export function useCountdown(targetTime) {
+  const [mounted, setMounted] = useState(false);
   const [countdown, setCountdown] = useState(() => calculateCountdown(targetTime));
 
   const update = useCallback(() => {
@@ -17,6 +18,7 @@ export function useCountdown(targetTime) {
   }, [targetTime]);
 
   useEffect(() => {
+    setMounted(true);
     update();
 
     if (!targetTime) return;
@@ -39,5 +41,6 @@ export function useCountdown(targetTime) {
     };
   }, [targetTime, update]);
 
-  return countdown;
+  return { ...countdown, mounted };
 }
+

@@ -102,6 +102,7 @@ export function LaunchCountdown({ launch, loading = false, onSelectLaunch = null
         {/* Status Message */}
         <div className="text-center mb-8">
           <p
+            suppressHydrationWarning
             className={`text-sm font-mono tracking-wide ${
               countdown.isPast
                 ? "text-[#FFB45C] font-semibold"
@@ -112,7 +113,7 @@ export function LaunchCountdown({ launch, loading = false, onSelectLaunch = null
           >
             {countdown.statusMessage}
           </p>
-          <p className="text-xs text-[#9AA9BD]/70 mt-1 font-mono">
+          <p className="text-xs text-[#9AA9BD]/70 mt-1 font-mono" suppressHydrationWarning>
             Local Window: {formatLocalDateTime(launch.net)}
           </p>
         </div>

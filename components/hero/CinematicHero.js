@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { RocketLaunchSequence } from "./RocketLaunchSequence.js";
 import { Compass, Sparkles, ArrowDown } from "lucide-react";
 
@@ -56,20 +57,20 @@ export function CinematicHero() {
               </p>
 
               <div className="flex flex-wrap items-center gap-4 pt-2">
-                <a
-                  href="#upcoming"
+                <Link
+                  href="/launches"
                   className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-[#65F6FF] text-[#070910] font-bold text-xs sm:text-sm tracking-wider hover:bg-[#65F6FF]/90 transition-all duration-300 shadow-[0_0_25px_rgba(101,246,255,0.4)] hover:shadow-[0_0_35px_rgba(101,246,255,0.6)]"
                 >
                   <Compass className="w-4 h-4" />
                   EXPLORE MISSIONS
-                </a>
-                <a
-                  href="#ai"
+                </Link>
+                <Link
+                  href="/ai"
                   className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-[#101C2D]/90 text-[#FFB45C] font-semibold text-xs sm:text-sm tracking-wider border border-[#FFB45C]/40 hover:bg-[#162438] hover:border-[#FFB45C] transition-all duration-300"
                 >
                   <Sparkles className="w-4 h-4 text-[#FFB45C]" />
                   MISSION INTELLIGENCE
-                </a>
+                </Link>
               </div>
             </div>
           </div>

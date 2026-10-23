@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sparkles,
   Send,
@@ -22,6 +22,15 @@ export function MissionIntelligence({ launches = [], initialMission = null }) {
   const [comparisonMissionId, setComparisonMissionId] = useState(
     launches[1]?.id || ""
   );
+
+  useEffect(() => {
+    if (!selectedMissionId && (initialMission?.id || launches[0]?.id)) {
+      setSelectedMissionId(initialMission?.id || launches[0]?.id);
+    }
+    if (!comparisonMissionId && launches.length > 1) {
+      setComparisonMissionId(launches[1]?.id);
+    }
+  }, [launches, initialMission, selectedMissionId, comparisonMissionId]);
   const [mode, setMode] = useState("brief"); // 'brief' | 'ask' | 'compare' | 'explain'
   const [userQuery, setUserQuery] = useState("");
   const [concept, setConcept] = useState("");

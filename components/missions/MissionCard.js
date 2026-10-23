@@ -102,25 +102,25 @@ export function MissionCard({ launch, onSelectLaunch = null, onAskAi = null }) {
 
             {countdown.isPast ? (
               <div className="flex items-center justify-between font-mono text-xs text-[#FFB45C] font-semibold py-1 px-2 rounded bg-[#101C2D]">
-                <span>{countdown.formatted || "T+ COMPLETED"}</span>
+                <span suppressHydrationWarning>{countdown.formatted || "T+ COMPLETED"}</span>
                 <span className="text-[10px] text-[#9AA9BD]">CONCLUDED</span>
               </div>
             ) : (
               <div className="grid grid-cols-4 gap-1 text-center font-mono">
                 <div className="bg-[#101C2D] py-1 rounded border border-[rgba(101,246,255,0.15)]">
-                  <div className="text-sm font-bold text-[#F3F7FC] tabular-nums">{padZero(countdown.days)}</div>
+                  <div className="text-sm font-bold text-[#F3F7FC] tabular-nums" suppressHydrationWarning>{padZero(countdown.days)}</div>
                   <div className="text-[9px] text-[#9AA9BD] uppercase font-sans">Days</div>
                 </div>
                 <div className="bg-[#101C2D] py-1 rounded border border-[rgba(101,246,255,0.15)]">
-                  <div className="text-sm font-bold text-[#F3F7FC] tabular-nums">{padZero(countdown.hours)}</div>
+                  <div className="text-sm font-bold text-[#F3F7FC] tabular-nums" suppressHydrationWarning>{padZero(countdown.hours)}</div>
                   <div className="text-[9px] text-[#9AA9BD] uppercase font-sans">Hrs</div>
                 </div>
                 <div className="bg-[#101C2D] py-1 rounded border border-[rgba(101,246,255,0.15)]">
-                  <div className="text-sm font-bold text-[#65F6FF] tabular-nums">{padZero(countdown.minutes)}</div>
+                  <div className="text-sm font-bold text-[#65F6FF] tabular-nums" suppressHydrationWarning>{padZero(countdown.minutes)}</div>
                   <div className="text-[9px] text-[#9AA9BD] uppercase font-sans">Mins</div>
                 </div>
                 <div className="bg-[#101C2D] py-1 rounded border border-[#65F6FF]/35 shadow-[0_0_8px_rgba(101,246,255,0.25)]">
-                  <div className="text-sm font-bold text-[#65F6FF] tabular-nums animate-pulse">{padZero(countdown.seconds)}</div>
+                  <div className="text-sm font-bold text-[#65F6FF] tabular-nums animate-pulse" suppressHydrationWarning>{padZero(countdown.seconds)}</div>
                   <div className="text-[9px] text-[#65F6FF] uppercase font-sans">Secs</div>
                 </div>
               </div>

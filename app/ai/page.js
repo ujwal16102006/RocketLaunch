@@ -1,40 +1,44 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar.js";
 import { Footer } from "@/components/layout/Footer.js";
 import { MissionIntelligence } from "@/components/ai/MissionIntelligence.js";
 import { selectNextUpcomingLaunch } from "@/utils/nextLaunchSelector.js";
-import { Sparkles, Key, ShieldCheck, Cpu, Terminal, ArrowRight, Zap, RefreshCw } from "lucide-react";
-import { Badge } from "@/components/ui/Badge.js";
+import { Sparkles, ShieldCheck, Cpu, Zap } from "lucide-react";
 
-export default function AiIntelligencePage() {
+function AiContent() {
+  const searchParams = useSearchParams();
   const [launches, setLaunches] = useState([]);
   const [loadingLaunches, setLoadingLaunches] = useState(true);
   const [initialMission, setInitialMission] = useState(null);
 
-  // Fetch upcoming launches so user can select real missions
   useEffect(() => {
+    let isSubscribed = true;
     fetch("/api/launches?type=upcoming&limit=25")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
+        if (!isSubscribed) return;
         if (data?.launches) {
           setLaunches(data.launches);
 
-          // Check if URL query has a missionId
-          if (typeof window !== "undefined") {
-            const params = new URLSearchParams(window.location.search);
-            const missionId = params.get("missionId");
-            if (missionId) {
-              const found = data.launches.find((l) => l.id === missionId);
-              if (found) setInitialMission(found);
-            }
+          const queryMissionId = searchParams?.get("missionId");
+          if (queryMissionId) {
+            const found = data.launches.find((l) => l.id === queryMissionId);
+            if (found) setInitialMission(found);
           }
         }
       })
       .catch((err) => console.error("Error loading launches for AI page:", err))
-      .finally(() => setLoadingLaunches(false));
-  }, []);
+      .finally(() => {
+        if (isSubscribed) setLoadingLaunches(false);
+      });
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [searchParams]);
 
   const nextLaunch = useMemo(() => {
     return selectNextUpcomingLaunch(launches);
@@ -125,3 +129,21 @@ export default function AiIntelligencePage() {
     </div>
   );
 }
+
+export default function AiIntelligencePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#060812] text-[#F3F7FC] flex items-center justify-center">
+          <div className="text-center font-mono text-xs text-[#65F6FF] flex items-center gap-2">
+            <Sparkles className="w-4 h-4 animate-spin text-[#FFB45C]" />
+            <span>INITIALIZING AI COMMAND CENTER...</span>
+          </div>
+        </div>
+      }
+    >
+      <AiContent />
+    </Suspense>
+  );
+}
+
