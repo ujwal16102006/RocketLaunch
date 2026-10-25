@@ -1,6 +1,6 @@
 "use client";
 
-import { Rocket, ArrowUp, Globe, Shield, Terminal } from "lucide-react";
+import { Rocket, ArrowUp, Globe, Terminal } from "lucide-react";
 
 export function Footer() {
   const scrollToTop = () => {
@@ -24,15 +24,6 @@ export function Footer() {
             <p className="text-xs text-[#9AA9BD] leading-relaxed max-w-md">
               A high-precision orbital launch tracking platform. Integrating verified spaceflight manifests from global launch operators with scroll-driven cinematic telemetry and DeepSeek aerospace intelligence.
             </p>
-            <div className="p-3.5 rounded-xl bg-[#101C2D]/60 border border-[rgba(180,210,235,0.1)] text-xs space-y-1">
-              <div className="flex items-center gap-2 text-[#FFB45C] font-medium">
-                <Shield className="w-3.5 h-3.5" />
-                <span>Notice Regarding Animation Footage</span>
-              </div>
-              <p className="text-[11px] text-[#9AA9BD] leading-normal">
-                The scroll-driven rocket launch sequence provides an illustrative visualization of orbital flight staging and is not a real-time live video broadcast of any individual mission.
-              </p>
-            </div>
           </div>
 
           {/* Telemetry Sources */}
@@ -77,22 +68,22 @@ export function Footer() {
             <ul className="space-y-2 text-xs">
               <li className="flex justify-between">
                 <span>UI & Layout:</span>
-                <span className="text-[#F3F7FC]">Gousiya M</span>
-              </li>
-              <li className="flex justify-between">
-                <span>API Integration:</span>
-                <span className="text-[#F3F7FC]">Thirumalesh</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Countdown Logic:</span>
-                <span className="text-[#F3F7FC]">Ujwal</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Discovery & Cards:</span>
                 <span className="text-[#F3F7FC]">V Tarunya Sree</span>
               </li>
               <li className="flex justify-between">
-                <span>Testing & Lead:</span>
+                <span>API Integration:</span>
+                <span className="text-[#F3F7FC]">Gousiya M</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Countdown Logic:</span>
+                <span className="text-[#F3F7FC]">Thirumalesh</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Discovery, Cards & Lead:</span>
+                <span className="text-[#F3F7FC]">Ujwal</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Testing :</span>
                 <span className="text-[#F3F7FC]">Anand</span>
               </li>
             </ul>
