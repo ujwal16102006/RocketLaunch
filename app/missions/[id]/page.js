@@ -12,6 +12,7 @@ import {
   getGoogleCalendarUrl,
   getSpaceportMapUrl,
 } from "@/utils/dateUtils.js";
+import { getSingleLaunchImage } from "@/utils/rocketImageResolver.js";
 import { useFavorites } from "@/hooks/useFavorites.js";
 import {
   ArrowLeft,
@@ -157,6 +158,29 @@ export default function MissionDossierPage({ params }) {
               <span>{favorite ? "Saved to Bookmarks" : "Save Flight"}</span>
             </button>
           </div>
+
+          {/* Real Spaceflight Launch Photography Banner */}
+          {(() => {
+            const dossierImage = launch.distinctImage || launch.image || getSingleLaunchImage(launch);
+            if (!dossierImage) return null;
+            return (
+              <div className="relative h-56 sm:h-72 w-full rounded-2xl overflow-hidden mb-6 border border-[rgba(180,210,235,0.15)] bg-[#101C2D]">
+                <img
+                  src={dossierImage}
+                  alt={launch.name}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#090F1B] via-[#090F1B]/20 to-transparent opacity-85" />
+                <div className="absolute bottom-4 left-4 flex items-center gap-2">
+                  <span className="text-xs font-mono tracking-wider px-3 py-1 rounded-full bg-[#070910]/80 border border-[#65F6FF]/30 text-[#65F6FF] flex items-center gap-1.5 shadow-md">
+                    <Rocket className="w-3.5 h-3.5 text-[#65F6FF]" />
+                    <span>{launch.rocket?.name || "Orbital Vehicle"}</span>
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
 
           <h1 className="text-3xl sm:text-5xl font-extrabold text-[#F3F7FC] tracking-tight mb-2">
             {launch.name}

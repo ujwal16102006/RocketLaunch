@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   formatUtcDateTime,
   formatIstDateTime,
@@ -9,6 +9,7 @@ import {
   getGoogleCalendarUrl,
   getSpaceportMapUrl,
 } from "@/utils/dateUtils.js";
+import { getSingleLaunchImage } from "@/utils/rocketImageResolver.js";
 import { useCountdown } from "@/hooks/useCountdown.js";
 import { useFavorites } from "@/hooks/useFavorites.js";
 import { Badge } from "@/components/ui/Badge.js";
@@ -30,8 +31,16 @@ import {
 
 export function MissionCard({ launch, onSelectLaunch = null, onAskAi = null }) {
   const { isFavorite, toggleFavorite } = useFavorites();
+  const targetImage = launch?.distinctImage || launch?.image || getSingleLaunchImage(launch);
+  const [cardImage, setCardImage] = useState(targetImage);
   const [imageError, setImageError] = useState(false);
   const countdown = useCountdown(launch?.net);
+
+  useEffect(() => {
+    const nextImg = launch?.distinctImage || launch?.image || getSingleLaunchImage(launch);
+    setCardImage(nextImg);
+    setImageError(false);
+  }, [launch?.distinctImage, launch?.image, launch?.id]);
 
   if (!launch) return null;
 
@@ -46,11 +55,18 @@ export function MissionCard({ launch, onSelectLaunch = null, onAskAi = null }) {
     <div className="glass-panel rounded-2xl overflow-hidden border border-[rgba(180,210,235,0.13)] hover:border-[#65F6FF]/40 transition-all duration-300 flex flex-col justify-between group hover:shadow-[0_12px_35px_rgba(0,0,0,0.5)]">
       {/* Top Banner / Image */}
       <div className="relative h-44 w-full bg-[#101C2D] overflow-hidden">
-        {launch.image && !imageError ? (
+        {cardImage && !imageError ? (
           <img
-            src={launch.image}
+            src={cardImage}
             alt={launch.name}
-            onError={() => setImageError(true)}
+            onError={() => {
+              const fallback = getSingleLaunchImage(launch);
+              if (fallback && cardImage !== fallback) {
+                setCardImage(fallback);
+              } else {
+                setImageError(true);
+              }
+            }}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />

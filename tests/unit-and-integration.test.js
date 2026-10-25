@@ -4,6 +4,7 @@ import { selectNextUpcomingLaunch } from "../utils/nextLaunchSelector.js";
 import { normalizeLaunch, normalizeLaunchList } from "../utils/launchNormalizer.js";
 import { naturalSort, discoverAndSyncFrames } from "../utils/frameDiscovery.js";
 import { generateMissionIntelligence } from "../services/deepseekApi.js";
+import { resolveUniqueLaunchImages, getSingleLaunchImage } from "../utils/rocketImageResolver.js";
 
 console.log("=== STARTING ROCKETLAUNCH VERIFICATION SUITE ===");
 
@@ -161,6 +162,52 @@ await asyncTest("DeepSeek AI: Gracefully reports setupRequired when API key is u
   assert.strictEqual(res.success, false);
   assert.strictEqual(res.setupRequired, true);
   assert.ok(res.error.includes("DEEPSEEK_API_KEY"));
+});
+
+// 6. Rocket Image Resolver & De-duplication Tests
+test("RocketImageResolver: De-duplicates identical images across consecutive launches", () => {
+  const sharedImage = "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/falcon_shared.jpg";
+  const duplicateMissions = [
+    { id: "f9-1", name: "Starlink 1", rocket: { name: "Falcon 9" }, image: sharedImage },
+    { id: "f9-2", name: "Starlink 2", rocket: { name: "Falcon 9" }, image: sharedImage },
+    { id: "f9-3", name: "Starlink 3", rocket: { name: "Falcon 9" }, image: sharedImage },
+  ];
+
+  const resolved = resolveUniqueLaunchImages(duplicateMissions);
+  assert.strictEqual(resolved.length, 3);
+  assert.strictEqual(resolved[0].distinctImage, sharedImage);
+  assert.notStrictEqual(resolved[1].distinctImage, sharedImage);
+  assert.notStrictEqual(resolved[2].distinctImage, sharedImage);
+  assert.notStrictEqual(resolved[1].distinctImage, resolved[2].distinctImage);
+
+  const uniqueSet = new Set(resolved.map((l) => l.distinctImage));
+  assert.strictEqual(uniqueSet.size, 3, "All 3 cards must have strictly distinct images");
+});
+
+test("RocketImageResolver: Guarantees 100% unique images across a large list", () => {
+  const mockLaunches = Array.from({ length: 25 }, (_, i) => ({
+    id: `launch-${i + 1}`,
+    name: `Mission ${i + 1}`,
+    rocket: { name: i % 2 === 0 ? "Falcon 9" : "Electron" },
+    image: i % 2 === 0 ? "https://example.com/same-falcon.jpg" : "https://example.com/same-electron.jpg",
+  }));
+
+  const resolved = resolveUniqueLaunchImages(mockLaunches);
+  const images = resolved.map((l) => l.distinctImage);
+  const uniqueImages = new Set(images);
+  assert.strictEqual(uniqueImages.size, 25, "Expected all 25 launch cards to have 100% unique images");
+});
+
+test("RocketImageResolver: Resolves single launch fallback photo for modals and dossiers", () => {
+  const single = getSingleLaunchImage({
+    id: "isro-test",
+    name: "Gaganyaan-1",
+    rocket: { name: "LVM-3" },
+    agency: { name: "ISRO" },
+  });
+  assert.ok(single);
+  assert.ok(typeof single === "string");
+  assert.ok(single.startsWith("http"));
 });
 
 console.log("\n========================================");

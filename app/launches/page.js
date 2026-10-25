@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer.js";
 import { MissionCard } from "@/components/missions/MissionCard.js";
 import { MissionDetailsModal } from "@/components/missions/MissionDetailsModal.js";
 import { selectNextUpcomingLaunch } from "@/utils/nextLaunchSelector.js";
+import { resolveUniqueLaunchImages } from "@/utils/rocketImageResolver.js";
 import { useFavorites } from "@/hooks/useFavorites.js";
 import {
   Rocket,
@@ -166,6 +167,8 @@ export default function UpcomingLaunchesPage() {
         }
         return 0;
       });
+
+    return resolveUniqueLaunchImages(result);
   }, [launches, searchQuery, selectedAgencyKey, selectedStatus, onlyFavorites, favorites, sortBy]);
 
   const handleResetFilters = () => {

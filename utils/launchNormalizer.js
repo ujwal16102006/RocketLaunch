@@ -80,7 +80,9 @@ export function normalizeLaunch(raw) {
   };
 
   // 8. Media & Webcast Links
-  const image = raw.image?.image_url || raw.image || null;
+  const image = raw.image?.image_url || (typeof raw.image === "string" ? raw.image : null);
+  const padImage = raw.pad?.image?.image_url || (typeof raw.pad?.image === "string" ? raw.pad.image : null) || null;
+  const configImage = raw.rocket?.configuration?.image?.image_url || null;
   const webcastLive = Boolean(raw.webcast_live);
   const vidURLs = Array.isArray(raw.vidURLs) ? raw.vidURLs.map((v) => (typeof v === "string" ? v : v.url)).filter(Boolean) : [];
   const infoURLs = Array.isArray(raw.infoURLs) ? raw.infoURLs.map((u) => (typeof u === "string" ? u : u.url)).filter(Boolean) : [];
@@ -100,6 +102,8 @@ export function normalizeLaunch(raw) {
     pad,
     mission,
     image,
+    padImage,
+    configImage,
     webcastLive,
     vidURLs,
     infoURLs,

@@ -9,6 +9,7 @@ import {
   getGoogleCalendarUrl,
   getSpaceportMapUrl,
 } from "@/utils/dateUtils.js";
+import { getSingleLaunchImage } from "@/utils/rocketImageResolver.js";
 import { useCountdown } from "@/hooks/useCountdown.js";
 import { useFavorites } from "@/hooks/useFavorites.js";
 import { Badge } from "@/components/ui/Badge.js";
@@ -54,6 +55,7 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
   const orbit = getOrbitInfo(launch.mission?.orbit);
   const calendarUrl = getGoogleCalendarUrl(launch);
   const mapUrl = getSpaceportMapUrl(launch.pad);
+  const modalImage = launch.distinctImage || launch.image || getSingleLaunchImage(launch);
 
   const handleGenerateBrief = async () => {
     setBriefLoading(true);
@@ -135,6 +137,25 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
             </button>
           </div>
         </div>
+
+        {/* Real Spaceflight Launch Photography Banner */}
+        {modalImage && (
+          <div className="relative h-44 sm:h-56 w-full rounded-2xl overflow-hidden mb-6 border border-[rgba(180,210,235,0.15)] bg-[#101C2D]">
+            <img
+              src={modalImage}
+              alt={launch.name}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#090F1B] via-[#090F1B]/20 to-transparent opacity-85" />
+            <div className="absolute bottom-3 left-3 flex items-center gap-2">
+              <span className="text-[11px] font-mono tracking-wider px-2.5 py-1 rounded-full bg-[#070910]/80 border border-[#65F6FF]/30 text-[#65F6FF] flex items-center gap-1.5 shadow-md">
+                <Rocket className="w-3 h-3 text-[#65F6FF]" />
+                <span>{launch.rocket?.name || "Orbital Vehicle"}</span>
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Mission Title & Provider */}
         <h2 id="modal-title" className="text-2xl sm:text-3xl font-extrabold text-[#F3F7FC] tracking-tight mb-1.5">

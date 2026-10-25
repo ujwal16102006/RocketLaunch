@@ -10,6 +10,7 @@ import { LaunchCountdown } from "@/components/countdown/LaunchCountdown.js";
 import { MissionCard } from "@/components/missions/MissionCard.js";
 import { MissionDetailsModal } from "@/components/missions/MissionDetailsModal.js";
 import { selectNextUpcomingLaunch } from "@/utils/nextLaunchSelector.js";
+import { resolveUniqueLaunchImages } from "@/utils/rocketImageResolver.js";
 import {
   Compass,
   Radio,
@@ -60,9 +61,9 @@ export default function HomePage() {
     return selectNextUpcomingLaunch(launches);
   }, [launches]);
 
-  // Next 6 flights for spotlight
+  // Next 6 flights for spotlight (each with guaranteed unique real launch image)
   const spotlightLaunches = useMemo(() => {
-    return launches.slice(0, 6);
+    return resolveUniqueLaunchImages(launches.slice(0, 6));
   }, [launches]);
 
   return (
