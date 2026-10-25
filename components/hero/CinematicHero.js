@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { RocketLaunchSequence } from "./RocketLaunchSequence.js";
-import { Compass, Sparkles, ArrowDown } from "lucide-react";
+import { Compass, Sparkles, ArrowDown, Quote } from "lucide-react";
 
 export function CinematicHero() {
   const [telemetry, setTelemetry] = useState({ progress: 0 });
@@ -15,19 +15,6 @@ export function CinematicHero() {
       <RocketLaunchSequence onProgress={setTelemetry}>
         {/* Floating Viewport Overlay Layer (Pinned directly on top of the rocket canvas) */}
         <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-between p-4 sm:p-8 lg:p-12 pt-28 sm:pt-32">
-          {/* Top Aerospace Branding Pill */}
-          <div className="flex items-center">
-            <div className="pointer-events-auto flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#070910]/85 border border-[#65F6FF]/30 backdrop-blur-md shadow-lg">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#65F6FF] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#65F6FF]"></span>
-              </span>
-              <span className="text-[11px] font-mono tracking-widest text-[#F3F7FC] font-semibold">
-                ISRO • SPACEX • NASA • GLOBAL LAUNCH TELEMETRY
-              </span>
-            </div>
-          </div>
-
           {/* Left Side: Clean Editorial Headline (Fades smoothly as rocket lifts off) */}
           <div className="my-auto w-full max-w-7xl mx-auto">
             <div
@@ -38,13 +25,6 @@ export function CinematicHero() {
                 pointerEvents: progress > 0.35 ? "none" : "auto",
               }}
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#101C2D]/80 border border-[#65F6FF]/30 backdrop-blur-md">
-                <Sparkles className="w-3.5 h-3.5 text-[#65F6FF]" />
-                <span className="text-xs font-mono text-[#65F6FF] tracking-wider uppercase font-semibold">
-                  Explore Beyond The Countdown
-                </span>
-              </div>
-
               <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#F3F7FC] leading-[1.05]">
                 THE NEXT FRONTIER <br />
                 <span className="bg-gradient-to-r from-[#F3F7FC] via-[#65F6FF] to-[#FFB45C] bg-clip-text text-transparent">
@@ -72,6 +52,33 @@ export function CinematicHero() {
                   MISSION INTELLIGENCE
                 </Link>
               </div>
+            </div>
+          </div>
+
+          {/* Right-Side Quotation Card (Positioned to seamlessly mask background watermark) */}
+          <div
+            className="pointer-events-auto absolute right-6 sm:right-10 lg:right-16 bottom-14 sm:bottom-16 z-30 w-72 sm:w-80 rounded-2xl bg-[#070910] border border-[#65F6FF]/35 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.95)] p-4 sm:p-5 transition-all duration-300 hover:border-[#65F6FF]/70"
+            style={{
+              opacity: Math.max(0.6, 1 - progress * 2),
+              transform: `translateY(${progress * 15}px)`,
+            }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Quote className="w-3.5 h-3.5 text-[#65F6FF]" />
+              <span className="text-[10px] font-mono tracking-widest text-[#65F6FF] uppercase font-bold">
+                EXPLORATION PERSPECTIVE
+              </span>
+            </div>
+            <p className="text-xs sm:text-[13px] text-[#F3F7FC] leading-relaxed italic font-light">
+              “The Earth is the cradle of humanity, but mankind cannot stay in the cradle forever.”
+            </p>
+            <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-[rgba(180,210,235,0.12)]">
+              <span className="text-[10px] font-mono text-[#FFB45C] font-semibold">
+                — Konstantin Tsiolkovsky
+              </span>
+              <span className="text-[9px] font-mono text-[#9AA9BD]/80">
+                ASTRONAUTICS PIONEER
+              </span>
             </div>
           </div>
 
