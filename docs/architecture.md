@@ -48,6 +48,10 @@ RocketLaunch/
 │   │   │       └── route.js              # Dynamic frame discovery & manifest endpoint
 │   │   └── launches/
 │   │       └── route.js                  # LL2 upcoming/historical proxy with failover
+│   ├── archive/
+│   │   └── page.js                       # Mission archive & historical flights dashboard
+│   ├── launches/
+│   │   └── page.js                       # Comprehensive upcoming launch manifest
 │   ├── missions/
 │   │   └── [id]/
 │   │       └── page.js                   # Standalone deep-linkable mission dossier
@@ -65,7 +69,7 @@ RocketLaunch/
 │   │   ├── LaunchCountdown.js            # Prominent T-minus flight countdown card
 │   │   └── CountdownDigits.js            # Monospace tabular digits component
 │   ├── missions/
-│   │   ├── MissionCard.js                # Editorial mission flight card with favorite toggle
+│   │   ├── MissionCard.js                # Editorial flight card with unique image & maps
 │   │   ├── MissionGrid.js                # Grid layout with skeletons, errors & empty states
 │   │   ├── MissionFilters.js             # Feed tabs, agency, status, search, and sorting
 │   │   └── MissionDetailsModal.js        # Flight parameters dossier dialog with AI brief
@@ -84,20 +88,25 @@ RocketLaunch/
 │   ├── useFavorites.js                   # Synced localStorage bookmarks via useSyncExternalStore
 │   └── useFrameDiscovery.js              # Dynamic frame manifest preloader and buffer manager
 ├── utils/
-│   ├── dateUtils.js                      # Countdown math, zero-padding, UTC/local formatters
+│   ├── dateUtils.js                      # Countdown math, dual timezone (UTC & IST), spaceport maps
 │   ├── launchNormalizer.js               # Sanitizes raw LL2 2.3.0/2.2.0 API responses
 │   ├── nextLaunchSelector.js             # Selects earliest upcoming non-cancelled flight
-│   └── frameDiscovery.js                 # Recursive scanner, natural sorter & manifest generator
+│   ├── frameDiscovery.js                 # Recursive scanner, natural sorter & manifest generator
+│   └── rocketImageResolver.js            # Real rocket photography resolver & de-duplication engine
 ├── scripts/
 │   └── discover-frames.js                # Standalone frame discovery CLI tool
 ├── tests/
-│   └── unit-and-integration.test.js      # Comprehensive automated verification suite
+│   └── unit-and-integration.test.js      # Comprehensive automated verification suite (13 tests)
 ├── docs/
 │   ├── architecture.md                   # System architecture and data flow
 │   ├── team-responsibilities.md          # Team roles and file ownership matrix
-│   └── contribution-guide.md             # Git branch and pull request workflow
+│   ├── contribution-guide.md             # Git branch and pull request workflow
+│   ├── api-integration.md                # Launch Library 2 API integration guide
+│   ├── testing-guide.md                  # Testing architecture and QA runbook
+│   └── deployment.md                     # Production deployment and operations guide
 ├── .env.example                          # Environment variable template
 ├── .gitignore                            # Version control exclusion rules
+├── .nvmrc                                # Node.js version specification (20.18.0)
 ├── README.md                             # Primary project documentation
 └── package.json                          # Dependencies and scripts manifest
 ```
@@ -110,7 +119,7 @@ RocketLaunch/
 * **Engine:** `utils/frameDiscovery.js` recursively scans the project workspace for image sequence candidate folders.
 * **Natural Numeric Sorting:** Uses `localeCompare(..., { numeric: true })` ensuring `ezgif-frame-2.png` appears before `ezgif-frame-10.png`.
 * **Zero Modification Policy:** Discovered source images (e.g. in `ezgif-31c5ab6cc892acf5-png-split`) are copied safely into `public/animations/rocket-launch/` without modifying or deleting originals.
-* **Manifest Creation:** Generates `manifest.json` recording total valid frame count (e.g. 300), first frame, last frame, and source directory.
+* **Manifest Creation:** Generates `manifest.json` recording total valid frame count (`300`), first frame, last frame, and source directory.
 * **Scroll-Controlled Canvas:** `RocketLaunchSequence.js` binds scroll progress directly to frame indices. Progressively buffers frames in batches using `requestAnimationFrame`. Automatically handles window resize, device pixel ratio scaling, and reduced motion preferences.
 
 ### B. High-Precision Live Countdown Engine
@@ -128,3 +137,14 @@ RocketLaunch/
 * **Security:** `DEEPSEEK_API_KEY` is strictly server-side in `process.env`.
 * **Strict Anti-Hallucination Prompting:** The system prompt constrains the model to the verified telemetry fields provided.
 * **Degradation:** If credentials are unconfigured, displays setup guidance without disabling or breaking the rest of the application.
+
+### E. Rocket Image Resolution & De-duplication Engine
+* **Engine:** `utils/rocketImageResolver.js`.
+* **Problem Solved:** Launch Library 2 returns the exact same vehicle configuration picture for consecutive launches of the same rocket (e.g., Falcon 9 or Electron).
+* **Curated Photography Registry:** Curated pools of verified real spaceflight photography for SpaceX (Falcon 9, Falcon Heavy, Starship), ISRO (LVM-3, PSLV, GSLV, SSLV), Rocket Lab (Electron), Arianespace (Ariane 6, Ariane 5), Roscosmos (Soyuz), ULA/NASA (Vulcan Centaur, Atlas V), and CNSA (Long March).
+* **Guaranteed 100% Uniqueness:** `resolveUniqueLaunchImages(launches)` tracks used images and de-duplicates them so that no two cards in any view display identical photos.
+
+### F. Master Dual Timezone & Spaceport Satellite Maps
+* **Engine:** `utils/dateUtils.js`.
+* **Dual Timezone:** Every mission displays both Coordinated Universal Time (UTC) and Indian Standard Time (IST, UTC+05:30) with explicit timezone identifiers.
+* **Spaceport Satellite Maps:** Directly resolves pad GPS coordinates (`latitude`, `longitude`) to open real-time satellite imagery on Google Maps.
