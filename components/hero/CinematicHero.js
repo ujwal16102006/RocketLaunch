@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { RocketLaunchSequence } from "./RocketLaunchSequence.js";
-import { Compass, Sparkles, ArrowDown, Quote } from "lucide-react";
+import { Compass, Sparkles, ArrowDown, Rocket } from "lucide-react";
 
 export function CinematicHero() {
   const [telemetry, setTelemetry] = useState({ progress: 0 });
@@ -55,31 +55,24 @@ export function CinematicHero() {
             </div>
           </div>
 
-          {/* Right-Side Quotation Card (Positioned to seamlessly mask background watermark) */}
+          {/* Right-Side Rocket Launch Badge (Positioned over bottom-right corner mark) */}
           <div
-            className="pointer-events-auto absolute right-6 sm:right-10 lg:right-16 bottom-14 sm:bottom-16 z-30 w-72 sm:w-80 rounded-2xl bg-[#070910] border border-[#65F6FF]/35 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.95)] p-4 sm:p-5 transition-all duration-300 hover:border-[#65F6FF]/70"
+            className="pointer-events-auto absolute right-6 sm:right-10 lg:right-16 bottom-14 sm:bottom-16 z-30 w-40 sm:w-44 rounded-2xl bg-[#070910] border border-[#65F6FF]/35 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.95)] p-4 flex flex-col items-center justify-center text-center group transition-all duration-300 hover:border-[#65F6FF]/70 hover:shadow-[0_0_25px_rgba(101,246,255,0.25)]"
             style={{
               opacity: Math.max(0.6, 1 - progress * 2),
               transform: `translateY(${progress * 15}px)`,
             }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Quote className="w-3.5 h-3.5 text-[#65F6FF]" />
-              <span className="text-[10px] font-mono tracking-widest text-[#65F6FF] uppercase font-bold">
-                EXPLORATION PERSPECTIVE
+            <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-[#65F6FF]/10 border border-[#65F6FF]/30 text-[#65F6FF] mb-2.5 transition-transform duration-300 group-hover:scale-110">
+              <Rocket className="w-6 h-6 -rotate-45 text-[#65F6FF] transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              <span className="absolute -bottom-1 -right-1 flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#65F6FF] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#65F6FF]"></span>
               </span>
             </div>
-            <p className="text-xs sm:text-[13px] text-[#F3F7FC] leading-relaxed italic font-light">
-              “The Earth is the cradle of humanity, but mankind cannot stay in the cradle forever.”
-            </p>
-            <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-[rgba(180,210,235,0.12)]">
-              <span className="text-[10px] font-mono text-[#FFB45C] font-semibold">
-                — Konstantin Tsiolkovsky
-              </span>
-              <span className="text-[9px] font-mono text-[#9AA9BD]/80">
-                ASTRONAUTICS PIONEER
-              </span>
-            </div>
+            <span className="text-xs font-mono font-bold tracking-widest text-[#F3F7FC] uppercase">
+              ROCKET LAUNCH
+            </span>
           </div>
 
           {/* Centered Scroll Prompt */}
