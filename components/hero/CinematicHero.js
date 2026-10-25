@@ -32,7 +32,7 @@ export function CinematicHero() {
                 </span>
               </h1>
 
-              <p className="text-sm sm:text-base text-[#65F6FF] max-w-xl leading-relaxed font-normal drop-shadow-[0_2px_12px_rgba(101,246,255,0.25)]">
+              <p className="text-sm sm:text-base text-black max-w-xl leading-relaxed font-semibold">
                 Witness real-time orbital launches from ISRO, SpaceX, NASA, and global spaceports. Track live T-0 ignition countdowns and access deep aerospace flight intelligence.
               </p>
 
