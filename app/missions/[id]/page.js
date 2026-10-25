@@ -5,7 +5,12 @@ import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar.js";
 import { Footer } from "@/components/layout/Footer.js";
 import { Badge } from "@/components/ui/Badge.js";
-import { formatUtcDateTime, formatLocalDateTime } from "@/utils/dateUtils.js";
+import {
+  formatUtcDateTime,
+  formatIstDateTime,
+  getOrbitInfo,
+  getGoogleCalendarUrl,
+} from "@/utils/dateUtils.js";
 import { useFavorites } from "@/hooks/useFavorites.js";
 import {
   ArrowLeft,
@@ -19,6 +24,8 @@ import {
   FileText,
   Sparkles,
   AlertTriangle,
+  Globe,
+  CalendarPlus,
 } from "lucide-react";
 
 export default function MissionDossierPage({ params }) {
@@ -111,6 +118,8 @@ export default function MissionDossierPage({ params }) {
 
   const favorite = isFavorite(launch.id);
   const isGo = (launch.status?.abbrev || "").toLowerCase() === "go";
+  const orbit = getOrbitInfo(launch.mission?.orbit);
+  const calendarUrl = getGoogleCalendarUrl(launch);
 
   return (
     <div className="min-h-screen bg-[#070910] text-[#F3F7FC] flex flex-col justify-between">
@@ -127,11 +136,15 @@ export default function MissionDossierPage({ params }) {
           </Link>
         </div>
 
-        <div className="glass-panel-elevated rounded-3xl p-6 sm:p-10 border border-[#65F6FF]/25">
+        <div className="glass-panel-elevated rounded-3xl p-6 sm:p-10 border border-[#65F6FF]/25 shadow-2xl">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[rgba(180,210,235,0.1)] pb-6 mb-6">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge variant="cyan">STANDALONE DOSSIER</Badge>
               <Badge variant={isGo ? "success" : "amber"}>{launch.status?.name || "Scheduled"}</Badge>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#FFB45C]/15 border border-[#FFB45C]/35 text-[#FFB45C] font-semibold flex items-center gap-1">
+                <Orbit className="w-3.5 h-3.5" />
+                <span>{orbit.badge}</span>
+              </span>
             </div>
             <button
               onClick={() => toggleFavorite(launch.id)}
@@ -145,9 +158,32 @@ export default function MissionDossierPage({ params }) {
           <h1 className="text-3xl sm:text-5xl font-extrabold text-[#F3F7FC] tracking-tight mb-2">
             {launch.name}
           </h1>
-          <p className="text-sm sm:text-base text-[#65F6FF] font-mono mb-8">
-            {launch.agency?.name} • {launch.agency?.countryCode}
+          <p className="text-sm sm:text-base text-[#65F6FF] font-mono mb-6">
+            {launch.agency?.name} • {launch.agency?.countryCode || "Global Spaceflight"}
           </p>
+
+          {/* Master Dual Timezone Strip: UTC & IST */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8 p-3.5 rounded-2xl bg-[#0D1424] border border-[rgba(101,246,255,0.2)]">
+            <div className="p-3 rounded-xl bg-[#101C2D] font-mono text-xs space-y-1">
+              <span className="text-[#65F6FF] flex items-center gap-1.5 font-bold">
+                <Globe className="w-3.5 h-3.5" />
+                <span>UTC Launch Time:</span>
+              </span>
+              <div className="text-sm text-[#F3F7FC] font-semibold pl-5" suppressHydrationWarning>
+                {formatUtcDateTime(launch.net)}
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-[#101C2D] font-mono text-xs border border-[#FFB45C]/25 space-y-1">
+              <span className="text-[#FFB45C] flex items-center gap-1.5 font-bold">
+                <span>🇮🇳</span>
+                <span>Indian Standard Time (IST):</span>
+              </span>
+              <div className="text-sm text-[#FFB45C] font-semibold pl-5" suppressHydrationWarning>
+                {formatIstDateTime(launch.net)}
+              </div>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
             <div className="glass-panel p-4 rounded-xl border border-[rgba(180,210,235,0.1)]">
@@ -156,24 +192,22 @@ export default function MissionDossierPage({ params }) {
                 <Rocket className="w-4 h-4 text-[#65F6FF]" />
                 <span>{launch.rocket?.name}</span>
               </div>
+              {launch.rocket?.family && (
+                <span className="text-xs text-[#9AA9BD] block mt-0.5">Family: {launch.rocket?.family}</span>
+              )}
             </div>
 
             <div className="glass-panel p-4 rounded-xl border border-[rgba(180,210,235,0.1)]">
-              <span className="text-[11px] font-mono text-[#9AA9BD] block mb-1">TARGET ORBIT</span>
-              <div className="flex items-center gap-2 text-sm font-semibold text-[#F3F7FC]">
-                <Orbit className="w-4 h-4 text-[#FFB45C]" />
-                <span>{launch.mission?.orbit?.name || "Low Earth Orbit"}</span>
+              <span className="text-[11px] font-mono text-[#9AA9BD] block mb-1">TARGET ORBIT / DESTINATION</span>
+              <div className="flex items-center gap-2 text-sm font-semibold text-[#FFB45C]">
+                <Orbit className="w-4 h-4" />
+                <span>{orbit.name} ({orbit.badge})</span>
               </div>
-            </div>
-
-            <div className="glass-panel p-4 rounded-xl border border-[rgba(180,210,235,0.1)]">
-              <span className="text-[11px] font-mono text-[#9AA9BD] block mb-1">SCHEDULED T-0</span>
-              <div className="flex items-center gap-2 text-sm font-semibold text-[#F3F7FC]">
-                <Calendar className="w-4 h-4 text-[#65F6FF]" />
-                <span className="font-mono text-xs">{formatUtcDateTime(launch.net)}</span>
-              </div>
-              <span className="text-xs text-[#9AA9BD] block mt-1 font-mono" suppressHydrationWarning>
-                Local: {formatLocalDateTime(launch.net)}
+              <span className="text-xs text-[#65F6FF] block mt-0.5 font-mono">
+                Altitude: {orbit.altitude}
+              </span>
+              <span className="text-[11px] text-[#9AA9BD] block mt-1 leading-normal">
+                {orbit.desc}
               </span>
             </div>
 
@@ -181,9 +215,27 @@ export default function MissionDossierPage({ params }) {
               <span className="text-[11px] font-mono text-[#9AA9BD] block mb-1">SPACEPORT COMPLEX</span>
               <div className="flex items-center gap-2 text-sm font-semibold text-[#F3F7FC]">
                 <MapPin className="w-4 h-4 text-[#FFB45C]" />
-                <span>{launch.pad?.name}</span>
+                <span className="truncate">{launch.pad?.name}</span>
               </div>
-              <span className="text-xs text-[#9AA9BD] block mt-1">{launch.pad?.locationName}</span>
+              <span className="text-xs text-[#9AA9BD] block mt-0.5 truncate">{launch.pad?.locationName}</span>
+            </div>
+
+            <div className="glass-panel p-4 rounded-xl border border-[rgba(180,210,235,0.1)] flex flex-col justify-between">
+              <div>
+                <span className="text-[11px] font-mono text-[#9AA9BD] block mb-1">CALENDAR INTEGRATION</span>
+                <span className="text-xs text-[#F3F7FC]">Synchronize ignition window</span>
+              </div>
+              {calendarUrl !== "#" && (
+                <a
+                  href={calendarUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#65F6FF]/15 hover:bg-[#65F6FF]/25 border border-[#65F6FF]/35 text-[#65F6FF] text-xs font-semibold w-fit mt-2 transition-colors"
+                >
+                  <CalendarPlus className="w-3.5 h-3.5" />
+                  <span>Add to Google Calendar</span>
+                </a>
+              )}
             </div>
           </div>
 

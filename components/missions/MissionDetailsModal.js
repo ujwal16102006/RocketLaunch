@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatUtcDateTime, formatLocalDateTime, padZero } from "@/utils/dateUtils.js";
+import {
+  formatUtcDateTime,
+  formatIstDateTime,
+  padZero,
+  getOrbitInfo,
+  getGoogleCalendarUrl,
+} from "@/utils/dateUtils.js";
 import { useCountdown } from "@/hooks/useCountdown.js";
 import { useFavorites } from "@/hooks/useFavorites.js";
 import { Badge } from "@/components/ui/Badge.js";
@@ -16,8 +22,11 @@ import {
   Video,
   FileText,
   Sparkles,
-  Shield,
   Clock,
+  CalendarPlus,
+  Globe,
+  Share2,
+  Check,
 } from "lucide-react";
 
 export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
@@ -25,6 +34,7 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
   const [briefLoading, setBriefLoading] = useState(false);
   const [briefContent, setBriefContent] = useState(null);
   const [briefError, setBriefError] = useState(null);
+  const [copiedLink, setCopiedLink] = useState(false);
   const countdown = useCountdown(launch?.net);
 
   useEffect(() => {
@@ -39,6 +49,8 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
 
   const favorite = isFavorite(launch.id);
   const isGo = (launch.status?.abbrev || "").toLowerCase() === "go";
+  const orbit = getOrbitInfo(launch.mission?.orbit);
+  const calendarUrl = getGoogleCalendarUrl(launch);
 
   const handleGenerateBrief = async () => {
     setBriefLoading(true);
@@ -64,6 +76,15 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
     }
   };
 
+  const handleShare = () => {
+    if (typeof window !== "undefined") {
+      const shareUrl = `${window.location.origin}/missions/${encodeURIComponent(launch.id)}`;
+      navigator.clipboard.writeText(shareUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
+  };
+
   return (
     <div
       role="dialog"
@@ -77,11 +98,24 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
       >
         {/* Header Controls */}
         <div className="flex items-center justify-between border-b border-[rgba(180,210,235,0.1)] pb-4 mb-6">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant="cyan">MISSION DOSSIER</Badge>
             <Badge variant={isGo ? "success" : "amber"}>{launch.status?.name || "Scheduled"}</Badge>
+            <span className="text-[11px] font-mono text-[#FFB45C] px-2.5 py-0.5 rounded-full bg-[#FFB45C]/10 border border-[#FFB45C]/30 flex items-center gap-1">
+              <Orbit className="w-3 h-3" />
+              <span>{orbit.badge}</span>
+            </span>
           </div>
-          <div className="flex items-center gap-3">
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={handleShare}
+              className="p-2 rounded-full bg-[#101C2D] border border-[rgba(180,210,235,0.2)] text-[#9AA9BD] hover:text-[#65F6FF] transition-colors"
+              title="Copy Mission Link"
+              aria-label="Share mission"
+            >
+              {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
+            </button>
             <button
               onClick={() => toggleFavorite(launch.id)}
               className="p-2 rounded-full bg-[#101C2D] border border-[rgba(180,210,235,0.2)] text-[#F3F7FC] hover:text-rose-400 transition-colors"
@@ -99,12 +133,12 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
           </div>
         </div>
 
-        {/* Mission Title */}
-        <h2 id="modal-title" className="text-2xl sm:text-3xl font-extrabold text-[#F3F7FC] tracking-tight mb-2">
+        {/* Mission Title & Provider */}
+        <h2 id="modal-title" className="text-2xl sm:text-3xl font-extrabold text-[#F3F7FC] tracking-tight mb-1.5">
           {launch.name}
         </h2>
-        <p className="text-sm text-[#65F6FF] font-mono mb-4">
-          {launch.agency?.name} • {launch.agency?.countryCode}
+        <p className="text-sm text-[#65F6FF] font-mono mb-6">
+          {launch.agency?.name} • {launch.agency?.countryCode || "Global Spaceflight"}
         </p>
 
         {/* Live Mission Countdown Telemetry */}
@@ -147,6 +181,29 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
           )}
         </div>
 
+        {/* Dual Timezone Master Banner: UTC & IST */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 p-3 rounded-2xl bg-[#0D1424] border border-[rgba(101,246,255,0.2)]">
+          <div className="p-3 rounded-xl bg-[#101C2D] font-mono text-xs space-y-1">
+            <span className="text-[#65F6FF] flex items-center gap-1.5 font-bold">
+              <Globe className="w-3.5 h-3.5" />
+              <span>Universal Coordinated Time (UTC):</span>
+            </span>
+            <div className="text-sm text-[#F3F7FC] font-semibold pl-5" suppressHydrationWarning>
+              {formatUtcDateTime(launch.net)}
+            </div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-[#101C2D] font-mono text-xs border border-[#FFB45C]/25 space-y-1">
+            <span className="text-[#FFB45C] flex items-center gap-1.5 font-bold">
+              <span>🇮🇳</span>
+              <span>Indian Standard Time (IST):</span>
+            </span>
+            <div className="text-sm text-[#FFB45C] font-semibold pl-5" suppressHydrationWarning>
+              {formatIstDateTime(launch.net)}
+            </div>
+          </div>
+        </div>
+
         {/* Flight Parameters Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
           <div className="glass-panel p-4 rounded-xl border border-[rgba(180,210,235,0.1)]">
@@ -160,30 +217,23 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
             )}
           </div>
 
+          {/* Target Orbit Details with User-Friendly Explanation */}
           <div className="glass-panel p-4 rounded-xl border border-[rgba(180,210,235,0.1)]">
-            <span className="text-[11px] font-mono text-[#9AA9BD] block mb-1">TARGET ORBIT</span>
-            <div className="flex items-center gap-2 text-sm font-semibold text-[#F3F7FC]">
-              <Orbit className="w-4 h-4 text-[#FFB45C]" />
-              <span>{launch.mission?.orbit?.name || "Low Earth Orbit"}</span>
+            <span className="text-[11px] font-mono text-[#9AA9BD] block mb-1">TARGET ORBIT / DESTINATION</span>
+            <div className="flex items-center gap-2 text-sm font-semibold text-[#FFB45C]">
+              <Orbit className="w-4 h-4" />
+              <span>{orbit.name} ({orbit.badge})</span>
             </div>
-            <span className="text-xs text-[#9AA9BD] block mt-0.5">
-              Class: {launch.mission?.orbit?.abbrev || "LEO"}
+            <span className="text-xs text-[#65F6FF] block mt-0.5 font-mono">
+              Altitude Range: {orbit.altitude}
+            </span>
+            <span className="text-[11px] text-[#9AA9BD] block mt-1 leading-normal">
+              {orbit.desc}
             </span>
           </div>
 
           <div className="glass-panel p-4 rounded-xl border border-[rgba(180,210,235,0.1)]">
-            <span className="text-[11px] font-mono text-[#9AA9BD] block mb-1">SCHEDULED T-0</span>
-            <div className="flex items-center gap-2 text-sm font-semibold text-[#F3F7FC]">
-              <Calendar className="w-4 h-4 text-[#65F6FF]" />
-              <span className="font-mono text-xs">{formatUtcDateTime(launch.net)}</span>
-            </div>
-            <span className="text-xs text-[#9AA9BD] block mt-0.5 font-mono" suppressHydrationWarning>
-              Local: {formatLocalDateTime(launch.net)}
-            </span>
-          </div>
-
-          <div className="glass-panel p-4 rounded-xl border border-[rgba(180,210,235,0.1)]">
-            <span className="text-[11px] font-mono text-[#9AA9BD] block mb-1">LAUNCH COMPLEX</span>
+            <span className="text-[11px] font-mono text-[#9AA9BD] block mb-1">SPACEPORT COMPLEX</span>
             <div className="flex items-center gap-2 text-sm font-semibold text-[#F3F7FC]">
               <MapPin className="w-4 h-4 text-[#FFB45C]" />
               <span className="truncate">{launch.pad?.name}</span>
@@ -191,6 +241,24 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
             <span className="text-xs text-[#9AA9BD] block mt-0.5 truncate">
               {launch.pad?.locationName}
             </span>
+          </div>
+
+          <div className="glass-panel p-4 rounded-xl border border-[rgba(180,210,235,0.1)] flex flex-col justify-between">
+            <div>
+              <span className="text-[11px] font-mono text-[#9AA9BD] block mb-1">CALENDAR SYNCHRONIZATION</span>
+              <span className="text-xs text-[#F3F7FC]">Never miss ignition time</span>
+            </div>
+            {calendarUrl !== "#" && (
+              <a
+                href={calendarUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#65F6FF]/15 hover:bg-[#65F6FF]/25 border border-[#65F6FF]/35 text-[#65F6FF] text-xs font-semibold w-fit mt-2 transition-colors"
+              >
+                <CalendarPlus className="w-3.5 h-3.5" />
+                <span>Add to Google Calendar</span>
+              </a>
+            )}
           </div>
         </div>
 
@@ -206,19 +274,19 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
           </p>
         </div>
 
-        {/* AI Mission Briefing Section */}
+        {/* About Mission & AI Flight Intelligence Section */}
         <div className="glass-panel p-5 rounded-2xl border border-[#FFB45C]/30 mb-8 bg-[#101C2D]/70">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
             <div className="flex items-center gap-2 text-sm font-bold text-[#FFB45C]">
               <Sparkles className="w-4 h-4" />
-              <span>DeepSeek AI Flight Intelligence</span>
+              <span>About Mission & DeepSeek Flight Intelligence</span>
             </div>
             <button
               onClick={handleGenerateBrief}
               disabled={briefLoading}
-              className="px-3.5 py-1.5 rounded-lg bg-[#FFB45C]/15 hover:bg-[#FFB45C]/25 text-[#FFB45C] border border-[#FFB45C]/30 text-xs font-semibold tracking-wider transition-colors disabled:opacity-50"
+              className="px-4 py-1.5 rounded-xl bg-[#FFB45C] hover:bg-[#FFB45C]/90 text-[#070910] text-xs font-bold tracking-wider transition-colors disabled:opacity-50 shadow-md"
             >
-              {briefLoading ? "Analyzing Telemetry..." : briefContent ? "Regenerate Brief" : "Generate Brief"}
+              {briefLoading ? "Analyzing Telemetry..." : briefContent ? "Regenerate Overview" : "Synthesize Mission Overview"}
             </button>
           </div>
 
@@ -236,14 +304,14 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
 
           {!briefContent && !briefLoading && !briefError && (
             <p className="text-xs text-[#9AA9BD]">
-              Click &quot;Generate Brief&quot; to synthesize an executive AI summary grounded strictly in verified telemetry facts.
+              Click &quot;Synthesize Mission Overview&quot; to generate an executive aerospace summary grounded in verified telemetry data.
             </p>
           )}
         </div>
 
-        {/* External Webcast & Pad Links */}
+        {/* External Webcast & Pad Links Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[rgba(180,210,235,0.1)] text-xs">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {launch.pad?.mapUrl && (
               <a
                 href={launch.pad.mapUrl}
@@ -252,7 +320,7 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
                 className="inline-flex items-center gap-1.5 text-[#65F6FF] hover:underline"
               >
                 <MapPin className="w-3.5 h-3.5" />
-                Spaceport Coordinates
+                Spaceport Map
                 <ExternalLink className="w-3 h-3" />
               </a>
             )}
@@ -261,7 +329,7 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
                 href={launch.vidURLs[0]}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 text-rose-400 hover:underline"
+                className="inline-flex items-center gap-1.5 text-rose-400 font-semibold hover:underline"
               >
                 <Video className="w-3.5 h-3.5" />
                 Official Webcast
@@ -275,7 +343,7 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
               onClose();
               if (onAskAi) onAskAi(launch);
             }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#65F6FF] text-[#070910] font-bold text-xs hover:bg-[#65F6FF]/90 transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#65F6FF] text-[#070910] font-bold text-xs hover:bg-[#65F6FF]/90 transition-colors shadow-lg"
           >
             <Sparkles className="w-3.5 h-3.5" />
             Open in AI Mission Intelligence
@@ -285,3 +353,4 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
     </div>
   );
 }
+

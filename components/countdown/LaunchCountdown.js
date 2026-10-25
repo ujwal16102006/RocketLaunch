@@ -2,8 +2,8 @@
 
 import { useCountdown } from "@/hooks/useCountdown.js";
 import { CountdownDigits } from "./CountdownDigits.js";
-import { formatUtcDateTime, formatLocalDateTime } from "@/utils/dateUtils.js";
-import { Rocket, MapPin, Calendar, Clock, Info, Sparkles } from "lucide-react";
+import { formatUtcDateTime, formatIstDateTime, getOrbitInfo, getGoogleCalendarUrl } from "@/utils/dateUtils.js";
+import { Rocket, MapPin, Calendar, Clock, Info, Sparkles, Globe, Orbit, CalendarPlus, Video } from "lucide-react";
 import { Badge } from "@/components/ui/Badge.js";
 
 export function LaunchCountdown({ launch, loading = false, onSelectLaunch = null, onAskAi = null }) {
@@ -46,29 +46,51 @@ export function LaunchCountdown({ launch, loading = false, onSelectLaunch = null
   }
 
   const isGo = (launch.status?.abbrev || "").toLowerCase() === "go";
+  const orbit = getOrbitInfo(launch.mission?.orbit);
+  const calendarUrl = getGoogleCalendarUrl(launch);
 
   return (
-    <div className="glass-panel-elevated rounded-3xl p-6 sm:p-10 lg:p-12 max-w-4xl mx-auto border border-[#65F6FF]/20 relative overflow-hidden">
+    <div className="glass-panel-elevated rounded-3xl p-6 sm:p-10 lg:p-12 max-w-4xl mx-auto border border-[#65F6FF]/25 relative overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.5)]">
       {/* Background illumination accent */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-b from-[#65F6FF]/10 via-[#FFB45C]/5 to-transparent rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+      <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-b from-[#65F6FF]/15 via-[#FFB45C]/5 to-transparent rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
 
       <div className="relative z-10">
         {/* Header telemetry tags */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant="cyan" className="gap-1.5 py-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[#65F6FF] animate-ping" />
               T-MINUS MISSION COUNTDOWN
             </Badge>
             <Badge variant={isGo ? "success" : "amber"}>{launch.status?.name || "Scheduled"}</Badge>
+            <span
+              className={`text-xs px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${
+                orbit.isPending
+                  ? "bg-[#101C2D] border-[rgba(180,210,235,0.15)] text-[#9AA9BD]"
+                  : "bg-[#FFB45C]/15 border-[#FFB45C]/40 text-[#FFB45C] font-semibold"
+              }`}
+              title={`${orbit.name} (${orbit.altitude}): ${orbit.desc}`}
+            >
+              <Orbit className="w-3.5 h-3.5" />
+              <span>Target Orbit: {orbit.badge}</span>
+            </span>
           </div>
-          <span className="text-xs font-mono text-[#9AA9BD]">
-            NET: {formatUtcDateTime(launch.net)}
-          </span>
+
+          {launch.vidURLs?.length > 0 && (
+            <a
+              href={launch.vidURLs[0]}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-semibold shadow-md transition-colors"
+            >
+              <Video className="w-3.5 h-3.5" />
+              <span>Official Webcast</span>
+            </a>
+          )}
         </div>
 
         {/* Mission Title & Provider */}
-        <div className="mb-8 text-center sm:text-left">
+        <div className="mb-6 text-center sm:text-left">
           <h2 className="text-2xl sm:text-4xl font-extrabold text-[#F3F7FC] tracking-tight mb-2">
             {launch.name}
           </h2>
@@ -78,10 +100,10 @@ export function LaunchCountdown({ launch, loading = false, onSelectLaunch = null
               {launch.rocket?.name}
             </span>
             <span>•</span>
-            <span>{launch.agency?.name}</span>
+            <span className="font-semibold text-[#F3F7FC]">{launch.agency?.name}</span>
             <span>•</span>
             <span className="flex items-center gap-1 text-xs">
-              <MapPin className="w-3.5 h-3.5" />
+              <MapPin className="w-3.5 h-3.5 text-[#FFB45C]" />
               {launch.pad?.name}, {launch.pad?.locationName}
             </span>
           </div>
@@ -99,11 +121,11 @@ export function LaunchCountdown({ launch, loading = false, onSelectLaunch = null
           />
         </div>
 
-        {/* Status Message */}
+        {/* Status Message & Dual Timezone Bar (UTC & IST) */}
         <div className="text-center mb-8">
           <p
             suppressHydrationWarning
-            className={`text-sm font-mono tracking-wide ${
+            className={`text-sm font-mono tracking-wide mb-4 ${
               countdown.isPast
                 ? "text-[#FFB45C] font-semibold"
                 : countdown.isImminent
@@ -113,33 +135,68 @@ export function LaunchCountdown({ launch, loading = false, onSelectLaunch = null
           >
             {countdown.statusMessage}
           </p>
-          <p className="text-xs text-[#9AA9BD]/70 mt-1 font-mono" suppressHydrationWarning>
-            Local Window: {formatLocalDateTime(launch.net)}
-          </p>
+
+          {/* Dual Timezone Badge Grid: UTC & IST */}
+          <div className="max-w-xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-2xl bg-[#090F1B] border border-[#65F6FF]/25 shadow-inner">
+            <div className="flex items-center justify-between sm:justify-center sm:gap-3 p-2 rounded-xl bg-[#101C2D] font-mono text-xs">
+              <span className="text-[#65F6FF] flex items-center gap-1.5 font-bold">
+                <Globe className="w-3.5 h-3.5" />
+                <span>UTC Time:</span>
+              </span>
+              <span className="text-[#F3F7FC] font-medium" suppressHydrationWarning>
+                {formatUtcDateTime(launch.net)}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between sm:justify-center sm:gap-3 p-2 rounded-xl bg-[#101C2D] font-mono text-xs border border-[#FFB45C]/25">
+              <span className="text-[#FFB45C] flex items-center gap-1.5 font-bold">
+                <span>🇮🇳</span>
+                <span>India (IST):</span>
+              </span>
+              <span className="text-[#FFB45C] font-semibold" suppressHydrationWarning>
+                {formatIstDateTime(launch.net)}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 border-t border-[rgba(180,210,235,0.1)]">
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-4 border-t border-[rgba(180,210,235,0.1)]">
           {onSelectLaunch && (
             <button
               onClick={() => onSelectLaunch(launch)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#101C2D] hover:bg-[#162438] text-[#F3F7FC] border border-[rgba(180,210,235,0.2)] text-xs font-semibold tracking-wider transition-all duration-200"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#101C2D] hover:bg-[#162438] text-[#F3F7FC] border border-[rgba(180,210,235,0.2)] text-xs font-semibold tracking-wider transition-all duration-200"
             >
               <Info className="w-4 h-4 text-[#65F6FF]" />
-              VIEW MISSION DOSSIER
+              <span>FULL MISSION DOSSIER</span>
             </button>
           )}
+
           {onAskAi && (
             <button
               onClick={() => onAskAi(launch)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#101C2D] hover:bg-[#162438] text-[#FFB45C] border border-[#FFB45C]/30 text-xs font-semibold tracking-wider transition-all duration-200"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#FFB45C] text-[#070910] hover:bg-[#FFB45C]/90 text-xs font-bold tracking-wider transition-all duration-200 shadow-[0_0_15px_rgba(255,180,92,0.3)]"
             >
-              <Sparkles className="w-4 h-4 text-[#FFB45C]" />
-              AI FLIGHT BRIEFING
+              <Sparkles className="w-4 h-4 text-[#070910]" />
+              <span>ABOUT MISSION & OVERVIEW</span>
             </button>
+          )}
+
+          {calendarUrl !== "#" && (
+            <a
+              href={calendarUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#101C2D] hover:bg-[#162438] text-[#65F6FF] border border-[#65F6FF]/35 text-xs font-semibold tracking-wider transition-all duration-200"
+              title="Add this rocket launch to your Google Calendar"
+            >
+              <CalendarPlus className="w-4 h-4" />
+              <span>ADD TO CALENDAR</span>
+            </a>
           )}
         </div>
       </div>
     </div>
   );
 }
+

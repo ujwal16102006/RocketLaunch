@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { RocketLaunchSequence } from "./RocketLaunchSequence.js";
-import { Compass, Sparkles, ArrowDown } from "lucide-react";
+import { Compass, Sparkles, ArrowDown, Rocket } from "lucide-react";
 
 export function CinematicHero() {
   const [telemetry, setTelemetry] = useState({ progress: 0 });
@@ -75,15 +75,50 @@ export function CinematicHero() {
             </div>
           </div>
 
-          {/* Bottom Scroll Prompt */}
-          <div
-            className="flex flex-col items-center justify-center gap-1.5 text-xs font-mono tracking-widest text-[#9AA9BD] transition-opacity duration-300 pointer-events-none"
-            style={{
-              opacity: Math.max(1 - progress * 4, 0),
-            }}
-          >
-            <span className="text-[11px] text-[#65F6FF]">SCROLL TO INITIATE ASCENT</span>
-            <ArrowDown className="w-4 h-4 text-[#65F6FF] animate-bounce" />
+          {/* Bottom Row: Centered Scroll Prompt + Bottom-Right Corner Aerospace Telemetry Widget */}
+          <div className="relative w-full flex items-center justify-center">
+            {/* Centered Scroll Prompt */}
+            <div
+              className="flex flex-col items-center justify-center gap-1.5 text-xs font-mono tracking-widest text-[#9AA9BD] transition-opacity duration-300 pointer-events-none"
+              style={{
+                opacity: Math.max(1 - progress * 4, 0),
+              }}
+            >
+              <span className="text-[11px] text-[#65F6FF]">SCROLL TO INITIATE ASCENT</span>
+              <ArrowDown className="w-4 h-4 text-[#65F6FF] animate-bounce" />
+            </div>
+
+            {/* Bottom-Right Corner Aerospace Flight Telemetry Widget */}
+            <div className="pointer-events-auto absolute right-0 bottom-0 flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-[#070910]/90 border border-[#65F6FF]/35 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.7)] transition-all duration-300 hover:border-[#65F6FF] hover:shadow-[0_0_20px_rgba(101,246,255,0.25)] group">
+              <div className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-[#65F6FF]/10 border border-[#65F6FF]/40 text-[#65F6FF] shrink-0 group-hover:scale-105 transition-transform">
+                <Rocket className="w-5 h-5 -rotate-45 text-[#65F6FF] transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <span className="absolute -bottom-1 -right-1 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF7900] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FF7900]"></span>
+                </span>
+              </div>
+              <div className="flex flex-col text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#65F6FF] animate-pulse"></span>
+                  <span className="text-[10px] font-mono tracking-widest text-[#65F6FF] uppercase font-bold">
+                    ROCKET ASCENT VECTOR
+                  </span>
+                  <span className="text-[9px] font-mono text-[#FFB45C] px-1 py-0.2 rounded bg-[#FFB45C]/15 border border-[#FFB45C]/30 ml-1">
+                    LIVE
+                  </span>
+                </div>
+                <div className="text-[11px] font-mono text-[#F3F7FC] font-semibold flex items-center gap-2 mt-0.5">
+                  <span>{telemetry.altitudeKm ? `ALT: ${telemetry.altitudeKm} km` : "STATUS: PAD READY"}</span>
+                  <span className="text-[#9AA9BD]/40">•</span>
+                  <span className="text-[#9AA9BD] text-[10px]">{telemetry.velocityKmh ? `${telemetry.velocityKmh} km/h` : "T-0 STANDBY"}</span>
+                </div>
+                <div className="text-[9px] font-mono text-[#9AA9BD]/80 mt-0.5 flex items-center gap-1">
+                  <span className="text-[#65F6FF]/70">IST (UTC+5:30)</span>
+                  <span>•</span>
+                  <span className="truncate max-w-[150px]">{telemetry.phase || "STANDBY FOR T-0"}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </RocketLaunchSequence>
