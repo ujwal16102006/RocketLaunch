@@ -23,10 +23,13 @@ export async function generateMissionIntelligence({
   userQuery = "",
   concept = "",
 }) {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
+  let apiKey = (process.env.DEEPSEEK_API_KEY || "").trim();
+  if (apiKey.startsWith("ysk-")) {
+    apiKey = apiKey.substring(1); // Auto-heal accidental 'y' before 'sk-'
+  }
   const model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
 
-  if (!apiKey || apiKey.trim() === "" || apiKey === "your_deepseek_api_key_here") {
+  if (!apiKey || apiKey === "" || apiKey === "your_deepseek_api_key_here") {
     return {
       success: false,
       setupRequired: true,
