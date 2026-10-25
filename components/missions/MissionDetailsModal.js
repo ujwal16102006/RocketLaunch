@@ -7,6 +7,7 @@ import {
   padZero,
   getOrbitInfo,
   getGoogleCalendarUrl,
+  getSpaceportMapUrl,
 } from "@/utils/dateUtils.js";
 import { useCountdown } from "@/hooks/useCountdown.js";
 import { useFavorites } from "@/hooks/useFavorites.js";
@@ -27,6 +28,7 @@ import {
   Globe,
   Share2,
   Check,
+  Map,
 } from "lucide-react";
 
 export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
@@ -51,6 +53,7 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
   const isGo = (launch.status?.abbrev || "").toLowerCase() === "go";
   const orbit = getOrbitInfo(launch.mission?.orbit);
   const calendarUrl = getGoogleCalendarUrl(launch);
+  const mapUrl = getSpaceportMapUrl(launch.pad);
 
   const handleGenerateBrief = async () => {
     setBriefLoading(true);
@@ -232,15 +235,29 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
             </span>
           </div>
 
-          <div className="glass-panel p-4 rounded-xl border border-[rgba(180,210,235,0.1)]">
-            <span className="text-[11px] font-mono text-[#9AA9BD] block mb-1">SPACEPORT COMPLEX</span>
-            <div className="flex items-center gap-2 text-sm font-semibold text-[#F3F7FC]">
-              <MapPin className="w-4 h-4 text-[#FFB45C]" />
-              <span className="truncate">{launch.pad?.name}</span>
+          <div className="glass-panel p-4 rounded-xl border border-[rgba(180,210,235,0.1)] flex flex-col justify-between">
+            <div>
+              <span className="text-[11px] font-mono text-[#9AA9BD] block mb-1">SPACEPORT COMPLEX</span>
+              <div className="flex items-center gap-2 text-sm font-semibold text-[#F3F7FC]">
+                <MapPin className="w-4 h-4 text-[#FFB45C]" />
+                <span className="truncate">{launch.pad?.name}</span>
+              </div>
+              <span className="text-xs text-[#9AA9BD] block mt-0.5 truncate">
+                {launch.pad?.locationName}
+              </span>
             </div>
-            <span className="text-xs text-[#9AA9BD] block mt-0.5 truncate">
-              {launch.pad?.locationName}
-            </span>
+            {mapUrl && (
+              <a
+                href={mapUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FFB45C]/15 hover:bg-[#FFB45C]/25 border border-[#FFB45C]/35 text-[#FFB45C] text-xs font-semibold w-fit mt-3 transition-colors"
+              >
+                <Map className="w-3.5 h-3.5" />
+                <span>Open Satellite Map</span>
+                <ExternalLink className="w-3 h-3 opacity-75" />
+              </a>
+            )}
           </div>
 
           <div className="glass-panel p-4 rounded-xl border border-[rgba(180,210,235,0.1)] flex flex-col justify-between">

@@ -337,3 +337,22 @@ export function getOrbitInfo(orbitRaw) {
   };
 }
 
+/**
+ * Resolves a direct Google Maps or spaceport satellite map URL for a launchpad.
+ */
+export function getSpaceportMapUrl(pad) {
+  if (!pad) return null;
+  if (pad.mapUrl && typeof pad.mapUrl === "string" && pad.mapUrl.startsWith("http")) {
+    return pad.mapUrl;
+  }
+  if (pad.latitude != null && pad.longitude != null && !isNaN(pad.latitude) && !isNaN(pad.longitude)) {
+    return `https://www.google.com/maps/search/?api=1&query=${pad.latitude},${pad.longitude}`;
+  }
+  const query = [pad.name, pad.locationName].filter(Boolean).join(", ");
+  if (query) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  }
+  return null;
+}
+
+

@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { formatUtcDateTime, formatIstDateTime, padZero, getOrbitInfo, getGoogleCalendarUrl } from "@/utils/dateUtils.js";
+import {
+  formatUtcDateTime,
+  formatIstDateTime,
+  padZero,
+  getOrbitInfo,
+  getGoogleCalendarUrl,
+  getSpaceportMapUrl,
+} from "@/utils/dateUtils.js";
 import { useCountdown } from "@/hooks/useCountdown.js";
 import { useFavorites } from "@/hooks/useFavorites.js";
 import { Badge } from "@/components/ui/Badge.js";
@@ -17,6 +24,8 @@ import {
   CalendarPlus,
   Video,
   Globe,
+  Map,
+  ExternalLink,
 } from "lucide-react";
 
 export function MissionCard({ launch, onSelectLaunch = null, onAskAi = null }) {
@@ -31,6 +40,7 @@ export function MissionCard({ launch, onSelectLaunch = null, onAskAi = null }) {
   const isGo = (launch.status?.abbrev || "").toLowerCase() === "go";
   const orbit = getOrbitInfo(launch.mission?.orbit);
   const calendarUrl = getGoogleCalendarUrl(launch);
+  const mapUrl = getSpaceportMapUrl(launch.pad);
 
   return (
     <div className="glass-panel rounded-2xl overflow-hidden border border-[rgba(180,210,235,0.13)] hover:border-[#65F6FF]/40 transition-all duration-300 flex flex-col justify-between group hover:shadow-[0_12px_35px_rgba(0,0,0,0.5)]">
@@ -187,12 +197,29 @@ export function MissionCard({ launch, onSelectLaunch = null, onAskAi = null }) {
             </div>
           </div>
 
-          {/* Spaceport Location */}
-          <div className="text-xs text-[#9AA9BD]/80 pb-3">
-            <div className="flex items-center gap-1.5 truncate">
-              <MapPin className="w-3.5 h-3.5 text-[#9AA9BD] flex-shrink-0" />
-              <span className="truncate text-[11px]">{launch.pad?.name}, {launch.pad?.locationName}</span>
+          {/* Spaceport Location & Direct Satellite Map Link */}
+          <div className="flex items-center justify-between gap-2 pb-3 pt-0.5">
+            <div className="flex items-center gap-1.5 truncate text-xs text-[#9AA9BD]/90 min-w-0">
+              <MapPin className="w-3.5 h-3.5 text-[#FFB45C] shrink-0" />
+              <span className="truncate text-[11px]" title={`${launch.pad?.name}, ${launch.pad?.locationName}`}>
+                {launch.pad?.name}, {launch.pad?.locationName}
+              </span>
             </div>
+
+            {mapUrl && (
+              <a
+                href={mapUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FFB45C]/15 hover:bg-[#FFB45C]/25 border border-[#FFB45C]/35 text-[#FFB45C] text-[10px] font-mono font-semibold transition-colors"
+                title={`Open Spaceport Map in Google Maps (${launch.pad?.name})`}
+              >
+                <Map className="w-2.5 h-2.5" />
+                <span>Map</span>
+                <ExternalLink className="w-2 h-2 opacity-75" />
+              </a>
+            )}
           </div>
         </div>
 
@@ -217,6 +244,20 @@ export function MissionCard({ launch, onSelectLaunch = null, onAskAi = null }) {
               <Sparkles className="w-3.5 h-3.5 text-[#FFB45C]" />
               <span>About Mission</span>
             </button>
+          )}
+
+          {/* Spaceport Map Action Button */}
+          {mapUrl && (
+            <a
+              href={mapUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="p-2 rounded-lg bg-[#101C2D] hover:bg-[#162438] text-[#9AA9BD] hover:text-[#FFB45C] border border-[rgba(180,210,235,0.15)] hover:border-[#FFB45C]/40 transition-colors flex items-center justify-center"
+              title="Open Spaceport Satellite Map"
+            >
+              <MapPin className="w-4 h-4" />
+            </a>
           )}
 
           {/* 1-Click Calendar Add */}

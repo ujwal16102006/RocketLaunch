@@ -2,8 +2,8 @@
 
 import { useCountdown } from "@/hooks/useCountdown.js";
 import { CountdownDigits } from "./CountdownDigits.js";
-import { formatUtcDateTime, formatIstDateTime, getOrbitInfo, getGoogleCalendarUrl } from "@/utils/dateUtils.js";
-import { Rocket, MapPin, Calendar, Clock, Info, Sparkles, Globe, Orbit, CalendarPlus, Video } from "lucide-react";
+import { formatUtcDateTime, formatIstDateTime, getOrbitInfo, getGoogleCalendarUrl, getSpaceportMapUrl } from "@/utils/dateUtils.js";
+import { Rocket, MapPin, Calendar, Clock, Info, Sparkles, Globe, Orbit, CalendarPlus, Video, Map, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/Badge.js";
 
 export function LaunchCountdown({ launch, loading = false, onSelectLaunch = null, onAskAi = null }) {
@@ -48,6 +48,7 @@ export function LaunchCountdown({ launch, loading = false, onSelectLaunch = null
   const isGo = (launch.status?.abbrev || "").toLowerCase() === "go";
   const orbit = getOrbitInfo(launch.mission?.orbit);
   const calendarUrl = getGoogleCalendarUrl(launch);
+  const mapUrl = getSpaceportMapUrl(launch.pad);
 
   return (
     <div className="glass-panel-elevated rounded-3xl p-6 sm:p-10 lg:p-12 max-w-4xl mx-auto border border-[#65F6FF]/25 relative overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.5)]">
@@ -192,6 +193,19 @@ export function LaunchCountdown({ launch, loading = false, onSelectLaunch = null
             >
               <CalendarPlus className="w-4 h-4" />
               <span>ADD TO CALENDAR</span>
+            </a>
+          )}
+
+          {mapUrl && (
+            <a
+              href={mapUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#101C2D] hover:bg-[#162438] text-[#FFB45C] border border-[#FFB45C]/35 text-xs font-semibold tracking-wider transition-all duration-200"
+              title={`View ${launch.pad?.name} on Spaceport Satellite Map`}
+            >
+              <MapPin className="w-4 h-4" />
+              <span>SPACEPORT MAP</span>
             </a>
           )}
         </div>
