@@ -1,190 +1,340 @@
-# ROCKETLAUNCH — Explore Beyond the Countdown
+# 🚀 RocketLaunch — Explore Beyond the Countdown
 
-A cinematic, production-grade space exploration platform and aerospace telemetry dashboard. RocketLaunch combines scroll-controlled rocket animation, verified real-world flight manifests from global launch operators (ISRO, NASA, SpaceX, ESA, Rocket Lab, JAXA), high-precision live countdowns, dynamic mission discovery, and grounded DeepSeek AI mission intelligence.
+Explore upcoming space missions, track launch countdowns, discover global launch providers, and explore mission intelligence through an interactive spaceflight dashboard.
 
----
-
-## 1. Project Overview & Problem Statement
-
-Orbital spaceflight schedules are highly dynamic. Launch windows shift frequently due to upper-stage propellant chilling, range weather constraints, avionics checkouts, and orbital traffic.
-
-**RocketLaunch** solves the fragmentation of public spaceflight data by delivering:
-1. **Centralized Orbital Manifest:** Real-time normalized telemetry from global launch operators via Launch Library 2.
-2. **Scroll-Driven Cinematic Storytelling:** Smooth HTML Canvas rocket-launch sequencing tied to scroll position, with progressive frame buffering and procedural visual fallbacks.
-3. **High-Precision Live Countdown Engine:** Millisecond-accurate T-minus countdowns calculated dynamically from UTC timestamps with tab-wake drift elimination.
-4. **Master Dual Timezone Display:** UTC and Indian Standard Time (IST, UTC+05:30) calculated across all mission cards, countdown banners, modals, and dossiers.
-5. **Interactive Spaceport Satellite Maps:** Direct one-click Google Maps satellite navigation to exact spaceport coordinates (e.g. Sriharikota, Cape Canaveral, Mahia Peninsula, Kourou, Baikonur).
-6. **Unique Real Rocket Photography:** Intelligent de-duplication engine ensuring that every card in any manifest displays a distinct, high-resolution authentic photograph with zero duplicate images.
-7. **Editorial Mission Discovery:** Full-text search, dynamic agency filters, orbit classification, and cross-tab synchronized favorites.
-8. **Grounded Aerospace Intelligence:** DeepSeek AI integration delivering executive flight briefs and Q&A strictly grounded in verified manifest facts without hallucinations.
+RocketLaunch is a space exploration web application designed to bring publicly available launch information, interactive mission discovery, cinematic rocket animation, and AI-assisted mission insights into one interface.
 
 > [!NOTE]
-> **Illustrative Animation Notice:** The scroll-driven rocket launch sequence provides an illustrative visualization of orbital flight staging and is not a real-time live video broadcast of any individual mission.
+> **Illustrative Animation Notice:** The rocket launch animation is an illustrative visualization. It is not live footage of a specific rocket launch.
 
 ---
 
-## 2. Technology Stack
+## 🌌 Overview
 
-- **Framework:** Next.js 15 (App Router, JavaScript)
-- **Library:** React 19
-- **Styling:** Vanilla CSS & Tailwind CSS v4 design tokens (Midnight Obsidian `#070910`, Electric Cyan `#65F6FF`, Solar Amber `#FFB45C`)
-- **Animation:** HTML Canvas high-performance scroll-driven rendering with progressive buffering
-- **Telemetry Data:** Launch Library 2 API (`lldev.thespacedevs.com/2.3.0/` and `ll.thespacedevs.com/2.3.0/`) with in-memory 60s TTL cache & automatic endpoint failover
-- **AI Intelligence:** DeepSeek API (`deepseek-chat`) via secure server-side route handler
-- **Testing:** Custom Node.js automated unit and integration verification suite
+Spaceflight schedules, launch providers, and mission information are published across different platforms. RocketLaunch aims to make this information easier to explore through a unified, interactive experience.
+
+The application combines launch schedule data, countdown functionality, mission discovery, and optional AI-powered assistance in a responsive web interface.
 
 ---
 
-## 3. Team Responsibilities & Engineering Matrix
+## ✨ Key Features
 
-The project is structured into one unified root application maintained by a five-member engineering team:
+* 🌍 **Global Launch Discovery** — Explore upcoming space missions using launch schedule data from Launch Library 2.
+* ⏱️ **Live Countdown** — Track the time remaining until a scheduled launch with millisecond accuracy and zero tab-wake drift.
+* 🎬 **Cinematic Rocket Animation** — Experience an interactive, scroll-driven rocket launch visualization powered by HTML5 Canvas.
+* 🛰️ **Mission Exploration** — Browse launch information and inspect available mission details.
+* 🔎 **Search and Filters** — Find missions using supported search fields (ISRO, SpaceX, NASA, Rocket Lab, ESA, JAXA) and filtering options.
+* ⭐ **Mission Favorites** — Save favorite missions for convenient access with cross-tab local storage synchronization.
+* 🕒 **UTC and IST Time Display** — Present launch schedules in both UTC and Indian Standard Time (IST, UTC+05:30).
+* 📍 **Spaceport Navigation** — Access launch site locations through Google Maps satellite links where coordinates are available.
+* 🖼️ **100% Unique Rocket Photography** — Intelligent image de-duplication engine ensuring distinct real launch photos for every card.
+* 🤖 **AI Mission Intelligence** — Use DeepSeek-powered mission summaries, question answering, and rocket comparisons when the API is configured.
+* 📱 **Responsive Interface** — Designed to support desktop and mobile screens seamlessly.
 
-| Team Member | Engineering Domain | Primary Responsibilities | Primary Owned Files |
-| :--- | :--- | :--- | :--- |
-| **V Tarunya Sree** | UI & Layout Engineer | Global application layout, navigation, cinematic hero presentation, navbar, footer, responsive styling, shared UI primitives. | `app/layout.js`, `app/globals.css`, `components/layout/Navbar.js`, `components/layout/Footer.js`, `components/hero/CinematicHero.js`, `components/ui/*` |
-| **Gousiya M** | Launch API Integration Engineer | Launch Library 2 API integration, fetching/validating launch records, response normalization, API error/empty states, caching and retries. | `services/launchApi.js`, `app/api/launches/route.js`, `utils/launchNormalizer.js`, `docs/api-integration.md` |
-| **Thirumalesh** | Countdown & Core Logic Engineer | Earliest next launch selection, countdown calculations, UTC/IST timezone handling, timer updates, expired launch handling, countdown unit tests. | `utils/dateUtils.js`, `utils/nextLaunchSelector.js`, `hooks/useCountdown.js`, `components/countdown/*` |
-| **Ujwal** | Mission Discovery & AI Intelligence Lead | Mission cards, search, multi-faceted filtering, unique rocket imagery, dossiers, favorites, DeepSeek AI briefs/Q&A, integration coordination. | `components/missions/MissionFilters.js`, `components/missions/MissionCard.js`, `components/missions/MissionGrid.js`, `components/missions/MissionDetailsModal.js`, `app/missions/[id]/page.js`, `hooks/useFavorites.js`, `utils/rocketImageResolver.js`, `services/deepseekApi.js`, `app/api/ai/route.js`, `components/ai/*` |
-| **Anand** | Testing & Quality Assurance Engineer | Unit and integration testing, edge cases, regression checks, frame discovery verification, test documentation, build verification, deployment guide. | `tests/*`, `utils/frameDiscovery.js`, `scripts/discover-frames.js`, `components/hero/RocketLaunchSequence.js`, `docs/testing-guide.md`, `docs/deployment.md` |
-
-Detailed responsibility matrices, shared interfaces, and dependency agreements are documented in [`docs/team-responsibilities.md`](docs/team-responsibilities.md).
-
----
-
-## 4. Automatic Rocket Frame Discovery
-
-The application automatically discovers sequential launch video frames placed anywhere inside the project workspace:
-
-- **Recursive Scanning:** Scans for `.webp`, `.png`, `.jpg`, `.jpeg`, and `.avif` sequences.
-- **Natural Numeric Sorting:** Handles natural sorting (`ezgif-frame-2.png` appears before `ezgif-frame-10.png`).
-- **Discovered Source:** Detected candidate folder `ezgif-31c5ab6cc892acf5-png-split` containing **300 valid sequential PNG frames**.
-- **Zero Asset Modification:** Copies frames safely into `public/animations/rocket-launch/` without modifying or deleting original source files.
-- **Manifest Generation:** Creates `public/animations/rocket-launch/manifest.json` recording total valid frame count (`300`), first frame, last frame, and candidate scores.
-- **CLI Command:** Run anytime via:
-  ```bash
-  npm run discover-frames
-  ```
+*Feature availability depends on the implementation and the data supplied by external services.*
 
 ---
 
-## 5. Quick Start & Installation
+## 🛠️ Technology Stack
+
+| Technology | Purpose |
+| :--- | :--- |
+| **Next.js 15** | Application framework and App Router |
+| **React 19** | Component-based user interface |
+| **JavaScript** | Application logic and core algorithms |
+| **Tailwind CSS v4 & CSS** | Styling, glassmorphism, and responsive layouts |
+| **HTML Canvas** | Rocket animation rendering |
+| **Launch Library 2 API** | Spaceflight launch schedule data |
+| **DeepSeek API** | Optional AI-assisted mission intelligence |
+| **Node.js** | JavaScript runtime and scripts |
+| **npm** | Dependency management and project scripts |
+| **Git and GitHub** | Version control and team collaboration |
+
+---
+
+## 🏗️ Project Structure
+
+The project follows a modular structure to separate the application interface, API integration, business logic, reusable components, and documentation:
+
+```
+RocketLaunch/
+├── app/
+│   ├── api/
+│   │   ├── launches/
+│   │   │   └── route.js                  # Launch Library 2 proxy with 60s cache
+│   │   ├── ai/
+│   │   │   └── route.js                  # DeepSeek server-side reasoning proxy
+│   │   └── animations/frames/
+│   │       └── route.js                  # Dynamic frame manifest endpoint
+│   ├── archive/
+│   │   └── page.js                       # Mission archive & historical flights
+│   ├── launches/
+│   │   └── page.js                       # Comprehensive upcoming launches manifest
+│   ├── missions/[id]/
+│   │   └── page.js                       # Standalone deep-linkable mission dossier
+│   ├── layout.js                         # Root layout and metadata
+│   ├── page.js                           # Telemetry dashboard & cinematic hero
+│   └── globals.css                       # Aerospace color tokens & typography
+├── components/
+│   ├── layout/
+│   │   ├── Navbar.js                     # Navigation with live countdown pill
+│   │   └── Footer.js                     # Telemetry citations & team credits
+│   ├── hero/
+│   │   ├── CinematicHero.js              # Opening typography & telemetry badge
+│   │   └── RocketLaunchSequence.js       # HTML Canvas scroll animation player
+│   ├── countdown/
+│   │   ├── LaunchCountdown.js            # Featured T-minus countdown banner
+│   │   └── CountdownDigits.js            # Monospace tabular digits display
+│   ├── missions/
+│   │   ├── MissionCard.js                # Flight card with unique photo & maps
+│   │   ├── MissionGrid.js                # Skeletons, empty states, and errors
+│   │   ├── MissionFilters.js             # Agency pills, status, and search
+│   │   └── MissionDetailsModal.js        # Detailed mission dossier dialog
+│   ├── ai/
+│   │   └── MissionIntelligence.js        # Interactive AI brief & Q&A workbench
+│   └── ui/
+│       ├── Badge.js                      # Status badges & technical pills
+│       ├── LoadingSkeleton.js            # Shimmer loading placeholders
+│       ├── ErrorState.js                 # Error banner with retry button
+│       └── EmptyState.js                 # Zero-records state display
+├── services/
+│   ├── launchApi.js                      # LL2 client with automatic failover
+│   └── deepseekApi.js                    # DeepSeek API client with grounding
+├── hooks/
+│   ├── useCountdown.js                   # High-precision countdown hook
+│   ├── useFavorites.js                   # Cross-tab synchronized bookmarks
+│   └── useFrameDiscovery.js              # Frame manifest preloader & buffer
+├── utils/
+│   ├── dateUtils.js                      # Countdown math, UTC/IST, spaceport maps
+│   ├── launchNormalizer.js               # LL2 data sanitizer & pad image extractor
+│   ├── nextLaunchSelector.js             # Earliest upcoming flight selector
+│   ├── frameDiscovery.js                 # Recursive scanner, natural sorter & manifest
+│   └── rocketImageResolver.js            # Real rocket photo resolver & de-duplicator
+├── scripts/
+│   └── discover-frames.js                # Standalone frame discovery CLI tool
+├── public/
+│   └── animations/rocket-launch/
+│       ├── manifest.json                 # Pre-indexed 300 sequential frame metadata
+│       └── ezgif-frame-001.png ...       # 300 sequential high-res ascent frames
+├── tests/
+│   └── unit-and-integration.test.js      # Automated verification suite (13 tests)
+├── docs/
+│   ├── architecture.md                   # System architecture and data flow
+│   ├── team-responsibilities.md          # Team roles and file ownership
+│   ├── contribution-guide.md             # Branching and contribution workflow
+│   ├── api-integration.md                # Launch Library 2 data integration & caching
+│   ├── testing-guide.md                  # Testing strategy and verification
+│   └── deployment.md                     # Production build and deployment
+├── .env.example                          # Environment variable template
+├── .gitignore                            # Version control exclusion rules
+├── .nvmrc                                # Node.js LTS version specification (20.18.0)
+├── package.json                          # Dependencies and scripts manifest
+└── README.md                             # This documentation file
+```
+
+---
+
+## ⚙️ Getting Started
 
 ### Prerequisites
-- Node.js 18.18+ or 20+ LTS (verified on Node.js v25.7.0; `.nvmrc` configured for `20.18.0`)
-- npm 9+ (tested on npm 11.10.1)
 
-### Installation
+Install the following tools before running the application:
+* **Node.js** — use a version supported by the project (tested on Node.js v25.7.0; `.nvmrc` configured for `20.18.0`).
+* **npm** — normally included with Node.js.
+* **Git** — for version control.
+
+Verify your installation:
 ```bash
-# 1. Install dependencies
+node --version
+npm --version
+git --version
+```
+
+### 1. Clone the Repository
+```bash
+git clone YOUR_GITHUB_REPOSITORY_URL
+cd RocketLaunch
+```
+*(Replace `YOUR_GITHUB_REPOSITORY_URL` with the actual URL of your GitHub repository).*
+
+### 2. Install Dependencies
+```bash
 npm install
+```
 
-# 2. Run automatic rocket frame discovery
+### 3. Configure Environment Variables
+Create a local environment file from the example:
+
+**Windows PowerShell:**
+```powershell
+Copy-Item .env.example .env.local
+```
+
+**macOS / Linux:**
+```bash
+cp .env.example .env.local
+```
+
+Open `.env.local` and configure the variables:
+```env
+DEEPSEEK_API_KEY=your_actual_deepseek_api_key
+DEEPSEEK_MODEL=deepseek-chat
+```
+*(Replace the placeholder with your own API key).*
+
+> [!SECURITY]
+> **Security:** Never commit `.env.local` or any file containing real credentials to GitHub. Keep secrets on the server side and use `.env.example` only for documenting the required variable names.
+>
+> The application supports full non-AI launch tracking and countdown functionality without a DeepSeek API key. AI features require valid configuration and a reachable API.
+
+### 4. Discover Rocket Animation Frames
+Run the automated frame discovery script to scan and index the animation sequence:
+```bash
 npm run discover-frames
+```
 
-# 3. Run automated tests
-npm test
-
-# 4. Start local development server
+### 5. Run the Development Server
+```bash
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) in your browser.
+Open the application in your browser:  
+[http://localhost:3000](http://localhost:3000/)
 
----
-
-## 6. Environment Variables Configuration
-
-Copy `.env.example` to `.env.local` to configure optional server-side AI features:
-
-```bash
-# In .env.local
-DEEPSEEK_API_KEY=your_actual_deepseek_api_key_here
-DEEPSEEK_MODEL=deepseek-chat
-```
-
-*Note: If `DEEPSEEK_API_KEY` is not set, the entire website remains 100% operational, and the AI panel gracefully displays setup instructions.*
-
----
-
-## 7. Automated Testing & Verification
-
-Run the verification test suite covering countdown math, next-launch selection, normalizer, frame discovery, image de-duplication, and AI request security:
-
+### 6. Run Tests
+Execute the automated test suite:
 ```bash
 npm test
 ```
 
-### Verified Test Results (All 13 Tests Passing):
-```
-=== STARTING ROCKETLAUNCH VERIFICATION SUITE ===
-✓ PASS: Countdown: Future timestamp calculates positive days, hours, mins, secs
-✓ PASS: Countdown: Expired timestamp handles gracefully without negative numbers
-✓ PASS: Countdown: Invalid timestamp handled without throwing
-✓ PASS: Countdown: Zero padding formats correctly
-✓ PASS: NextLaunch: Correctly selects earliest future launch and ignores past & cancelled
-✓ PASS: Normalizer: Raw LL2 records properly mapped into normalized flight profile
-✓ PASS: Normalizer: Handles null, empty, or missing fields without crashing
-✓ PASS: FrameDiscovery: Natural sort orders frame-2 before frame-10
-✓ PASS: FrameDiscovery: Discovers sequential frames and produces manifest
-✓ PASS: DeepSeek AI: Gracefully reports setupRequired when API key is unconfigured
-✓ PASS: RocketImageResolver: De-duplicates identical images across consecutive launches
-✓ PASS: RocketImageResolver: Guarantees 100% unique images across a large list
-✓ PASS: RocketImageResolver: Resolves single launch fallback photo for modals and dossiers
-
-========================================
-TEST RESULTS: 13 passed, 0 failed
-========================================
+### 7. Create a Production Build
+```bash
+npm run build
+npm run start
 ```
 
 ---
 
-## 8. API Dependencies & Rate Limits
+## 🔌 External Services
 
-- **Launch Library 2 (The Space Devs):**
-  - Public unauthenticated tier allows approximately 15 requests per hour.
-  - To prevent hitting limits, RocketLaunch enforces a **60-second in-memory server-side cache**.
-  - If the primary endpoint `lldev.thespacedevs.com` returns a 429 status code or times out, the service automatically fails over to `ll.thespacedevs.com`.
-  - Detailed API documentation: [`docs/api-integration.md`](docs/api-integration.md).
+### Launch Library 2
+RocketLaunch uses the Launch Library 2 API as its source for launch schedule information.
+* **Development endpoint:** `https://lldev.thespacedevs.com/2.3.0/`
+* **Production endpoint:** `https://ll.thespacedevs.com/2.3.0/`
 
-- **DeepSeek API:**
-  - Used for executive flight briefs and Q&A on `/ai`.
-  - Server-side only; `DEEPSEEK_API_KEY` is never leaked to client bundles.
+Launch schedules and mission details depend on the availability, completeness, and freshness of upstream data.
+External API rate limits and service interruptions may affect the availability of launch information. The application communicates loading, empty, and error states clearly.
 
----
-
-## 9. GitHub Contribution Workflow
-
-The engineering team adheres to a strict feature-branch and pull request workflow:
-1. Clone the repository and checkout a descriptive feature branch (`feat/ui-...`, `feat/api-...`, `feat/countdown-...`, `feat/discovery-...`, `feat/test-...`).
-2. Make changes strictly within assigned file boundaries.
-3. Run `npm test` and `npm run build` locally.
-4. Submit a Pull Request targeting `main`.
-5. Obtain code review approval and ensure all checks pass before merging.
-
-Detailed guide: [`docs/contribution-guide.md`](docs/contribution-guide.md).
+### DeepSeek AI
+DeepSeek provides optional AI-assisted mission summaries, technical Q&A, and vehicle comparisons.
+* **Model configuration:** `DEEPSEEK_MODEL=deepseek-chat`
+* The API key must be configured through a server-side environment variable.
+* AI-generated information should be treated as assistance rather than an authoritative source of launch status. Responses are grounded in available mission data, and users should verify critical information with official launch providers.
 
 ---
 
-## 10. Known Limitations
+## 👥 Engineering Team
 
-1. **Spaceport Weather Data:** Ground weather conditions at launch complexes are currently inferred from Launch Library 2 status descriptions rather than a dedicated meteorology API.
-2. **Launch Time Changes:** When an operator enters an indefinite hold, LL2 may keep the existing T-0 timestamp until an official range reset is published.
-3. **Illustrative Animation Sequence:** The 300-frame scroll animation represents a multi-stage orbital ascent and is illustrative rather than live closed-circuit broadcast video of the current mission.
+RocketLaunch is developed collaboratively by a five-member engineering team:
+
+| Team Member | Role | Primary Responsibilities |
+| :--- | :--- | :--- |
+| **V Tarunya Sree** | UI & Layout Engineer | Application layout, navigation, responsive styling, shared UI components |
+| **Gousiya M** | Launch API Integration Engineer | Launch data integration, response normalization, API error handling |
+| **Thirumalesh** | Countdown & Core Logic Engineer | Countdown calculations, next-launch selection, time-zone handling |
+| **Ujwal** | Mission Discovery & AI Intelligence Lead | Mission cards, search, filters, favorites, AI integration, feature coordination |
+| **Anand** | Testing & Quality Assurance Engineer | Automated testing, frame discovery verification, regression checks, documentation |
+
+Detailed responsibilities and file ownership are documented in [`docs/team-responsibilities.md`](docs/team-responsibilities.md).
 
 ---
 
-## 11. Security & License Information
+## 🧪 Testing and Quality Assurance
 
-- **Security:** API keys and credentials are never checked into version control. Server-side inputs are validated and length-limited.
-- **License:** License decision remains pending by project leadership. All rights reserved.
+Testing covers the application's core behavior and important edge cases:
+* Countdown calculations for future, expired, and invalid timestamps.
+* Correct selection of the next eligible launch (filtering past/cancelled flights).
+* Normalization of launch API responses (supporting LL2 2.3.0 and 2.2.0 schemas).
+* Handling of missing or incomplete mission information.
+* Rocket animation frame discovery and natural numeric ordering (`frame-2` before `frame-10`).
+* De-duplication of rocket photos ensuring 100% unique images across cards.
+* AI endpoint validation and missing-key behavior.
+* Loading, empty, and API error states.
+* Production build compatibility.
+
+Run the project's configured test suite:
+```bash
+npm test
+```
+*Current test status: 13 passed, 0 failed.*
+
+Create and verify a production build:
+```bash
+npm run build
+```
 
 ---
 
-## 12. Documentation Directory
+## 🔐 Security
 
-- [`docs/architecture.md`](docs/architecture.md) — System architecture, component hierarchy & data flow diagrams.
-- [`docs/team-responsibilities.md`](docs/team-responsibilities.md) — Team allocation and file ownership matrix.
-- [`docs/contribution-guide.md`](docs/contribution-guide.md) — Git branching strategy, code style, and PR checklist.
-- [`docs/api-integration.md`](docs/api-integration.md) — Launch Library 2 API endpoint specification and caching.
-- [`docs/testing-guide.md`](docs/testing-guide.md) — Test architecture, test cases, and quality runbook.
-- [`docs/deployment.md`](docs/deployment.md) — Production build guidelines and deployment checklist.
+RocketLaunch follows these security principles:
+* Keep API credentials out of source control.
+* Store local secrets in `.env.local`.
+* Include `.env.example` without real credentials.
+* Keep private API keys out of client-side bundles.
+* Validate user input in server-side API routes.
+* Avoid exposing sensitive error details to users.
+* Review staged files before committing changes.
+* Before pushing to GitHub, verify that secret files are excluded by `.gitignore`.
+
+---
+
+## 🤝 Contributing
+
+Contributions should follow the team's agreed development workflow:
+1. Clone the repository.
+2. Create a feature branch (`git checkout -b feature/your-feature`).
+3. Work within the assigned responsibility area.
+4. Test the changes locally (`npm test` and `npm run build`).
+5. Review the changes before committing.
+6. Open a pull request targeting `main`.
+7. Address review feedback before merging.
+
+Use descriptive commit messages and avoid committing generated files, local credentials, or unrelated changes. Refer to [`docs/contribution-guide.md`](docs/contribution-guide.md) for the team's detailed workflow.
+
+---
+
+## ⚠️ Limitations
+
+* Launch schedules may change as launch providers update their plans.
+* External API availability and rate limits may affect mission data.
+* Some mission fields may be missing or incomplete from upstream telemetry.
+* AI-generated summaries may contain inaccuracies and should be verified against reliable sources.
+* The rocket animation is illustrative and does not represent live telemetry or live footage of a particular launch.
+* AI functionality depends on valid API configuration and service availability.
+
+---
+
+## 📚 Documentation
+
+The following documents provide additional technical information:
+
+| Document | Description |
+| :--- | :--- |
+| [`docs/architecture.md`](docs/architecture.md) | Application architecture and data flow |
+| [`docs/team-responsibilities.md`](docs/team-responsibilities.md) | Team roles and file ownership |
+| [`docs/contribution-guide.md`](docs/contribution-guide.md) | Branching and contribution workflow |
+| [`docs/api-integration.md`](docs/api-integration.md) | Launch data integration and caching |
+| [`docs/testing-guide.md`](docs/testing-guide.md) | Testing strategy and verification |
+| [`docs/deployment.md`](docs/deployment.md) | Production build and deployment |
+
+---
+
+## 📄 License
+
+The project's license has not yet been finalized. Until a license is selected and added to the repository, usage and redistribution permissions should not be assumed.
+
+---
+
+**RocketLaunch — Explore Beyond the Countdown**  
+*Bringing spaceflight discovery and mission intelligence into one experience.*

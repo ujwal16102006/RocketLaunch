@@ -71,19 +71,19 @@ export function Footer() {
                 <span className="text-[#F3F7FC]">V Tarunya Sree</span>
               </li>
               <li className="flex justify-between">
-                <span>API Integration:</span>
+                <span>Launch API:</span>
                 <span className="text-[#F3F7FC]">Gousiya M</span>
               </li>
               <li className="flex justify-between">
-                <span>Countdown Logic:</span>
+                <span>Countdown & Logic:</span>
                 <span className="text-[#F3F7FC]">Thirumalesh</span>
               </li>
               <li className="flex justify-between">
-                <span>Discovery, Cards & Lead:</span>
+                <span>Discovery & AI Lead:</span>
                 <span className="text-[#F3F7FC]">Ujwal</span>
               </li>
               <li className="flex justify-between">
-                <span>Testing :</span>
+                <span>Testing & QA:</span>
                 <span className="text-[#F3F7FC]">Anand</span>
               </li>
             </ul>
