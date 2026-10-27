@@ -381,8 +381,8 @@ export function MissionDetailsModal({ launch, onClose, onAskAi = null }) {
 
           <button
             onClick={() => {
-              onClose();
               if (onAskAi) onAskAi(launch);
+              onClose();
             }}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#65F6FF] text-[#070910] font-bold text-xs hover:bg-[#65F6FF]/90 transition-colors shadow-lg"
           >

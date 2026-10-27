@@ -327,8 +327,13 @@ export default function MissionArchivePage() {
                 key={launch.id}
                 launch={launch}
                 onSelectLaunch={setActiveModalLaunch}
-                onAskAi={() => {
-                  router.push(`/ai?missionId=${encodeURIComponent(launch.id)}&missionName=${encodeURIComponent(launch.name)}`);
+                onAskAi={(l) => {
+                  const target = l || launch;
+                  if (target?.id) {
+                    router.push(`/ai?missionId=${encodeURIComponent(target.id)}&missionName=${encodeURIComponent(target.name || "")}`);
+                  } else {
+                    router.push("/ai");
+                  }
                 }}
               />
             ))}
@@ -341,8 +346,13 @@ export default function MissionArchivePage() {
         <MissionDetailsModal
           launch={activeModalLaunch}
           onClose={() => setActiveModalLaunch(null)}
-          onAskAi={() => {
-            router.push(`/ai?missionId=${encodeURIComponent(activeModalLaunch.id)}&missionName=${encodeURIComponent(activeModalLaunch.name)}`);
+          onAskAi={(targetLaunch) => {
+            const target = targetLaunch || activeModalLaunch;
+            if (target?.id) {
+              router.push(`/ai?missionId=${encodeURIComponent(target.id)}&missionName=${encodeURIComponent(target.name || "")}`);
+            } else {
+              router.push("/ai");
+            }
           }}
         />
       )}

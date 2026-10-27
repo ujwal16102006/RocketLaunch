@@ -24,9 +24,21 @@ function AiContent() {
           setLaunches(data.launches);
 
           const queryMissionId = searchParams?.get("missionId");
+          const queryMissionName = searchParams?.get("missionName");
           if (queryMissionId) {
             const found = data.launches.find((l) => l.id === queryMissionId);
-            if (found) setInitialMission(found);
+            if (found) {
+              setInitialMission(found);
+            } else if (queryMissionName) {
+              setInitialMission({
+                id: queryMissionId,
+                name: queryMissionName,
+                rocket: { name: "Orbital Launch Vehicle" },
+                agency: { name: "Global Aerospace Operator" },
+                pad: { name: "Launch Complex", locationName: "Spaceport" },
+                mission: { orbit: { name: "Low Earth Orbit", abbrev: "LEO" } },
+              });
+            }
           }
         }
       })

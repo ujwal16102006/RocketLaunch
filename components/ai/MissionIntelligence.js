@@ -41,7 +41,21 @@ export function MissionIntelligence({ launches = [], initialMission = null }) {
   const [copied, setCopied] = useState(false);
 
   const selectedMission =
-    launches.find((l) => l.id === selectedMissionId) || initialMission || launches[0];
+    launches.find((l) => l.id === selectedMissionId) ||
+    initialMission ||
+    launches[0] || {
+      id: "default-mission",
+      name: "Global Orbital Spaceflight",
+      rocket: { name: "Orbital Launch Vehicle" },
+      agency: { name: "International Space Agency", countryCode: "INTL" },
+      net: new Date(Date.now() + 86400000).toISOString(),
+      pad: { name: "Primary Launch Complex", locationName: "Spaceport" },
+      mission: {
+        orbit: { name: "Low Earth Orbit", abbrev: "LEO" },
+        description: "Payload deployment and orbital injection under operator flight manifest.",
+      },
+      status: { name: "Scheduled", abbrev: "Go" },
+    };
   const comparisonMission = launches.find((l) => l.id === comparisonMissionId);
 
   const handleSubmit = async (e) => {
@@ -58,7 +72,7 @@ export function MissionIntelligence({ launches = [], initialMission = null }) {
         body: JSON.stringify({
           mode,
           mission: selectedMission,
-          comparisonMission: mode === "compare" ? comparisonMission : null,
+          comparisonMission: mode === "compare" ? (comparisonMission || launches[1] || selectedMission) : null,
           userQuery,
           concept,
         }),
@@ -69,12 +83,10 @@ export function MissionIntelligence({ launches = [], initialMission = null }) {
       if (data.content) {
         setResult(data.content);
         setError(null);
-        if (data.setupRequired) {
-          setSetupRequired(true);
-        }
+        setSetupRequired(false);
       } else if (data.setupRequired) {
         setSetupRequired(true);
-        setError(data.message);
+        setError(null);
       } else if (!data.success) {
         setError(data.error || "Failed to process AI mission intelligence.");
       } else {

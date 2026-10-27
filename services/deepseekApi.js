@@ -260,7 +260,7 @@ function formatOfflineNotice(reason) {
 /**
  * Procedural aerospace telemetry intelligence synthesis grounded in verified mission records.
  */
-function generateGroundedAerospaceAnalysis(
+export function generateGroundedAerospaceAnalysis(
   mode,
   mission,
   comparisonMission,

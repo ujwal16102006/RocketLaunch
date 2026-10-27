@@ -94,7 +94,12 @@ export default function HomePage() {
             loading={loading}
             onSelectLaunch={(l) => setActiveModalLaunch(l)}
             onAskAi={(l) => {
-              router.push(`/ai?missionId=${encodeURIComponent(l.id)}&missionName=${encodeURIComponent(l.name)}`);
+              const target = l || nextLaunch;
+              if (target?.id) {
+                router.push(`/ai?missionId=${encodeURIComponent(target.id)}&missionName=${encodeURIComponent(target.name || "")}`);
+              } else {
+                router.push("/ai");
+              }
             }}
           />
         </section>
@@ -234,8 +239,13 @@ export default function HomePage() {
                   key={launch.id}
                   launch={launch}
                   onSelectLaunch={(l) => setActiveModalLaunch(l)}
-                  onAskAi={() => {
-                    router.push(`/ai?missionId=${encodeURIComponent(launch.id)}&missionName=${encodeURIComponent(launch.name)}`);
+                  onAskAi={(l) => {
+                    const target = l || launch;
+                    if (target?.id) {
+                      router.push(`/ai?missionId=${encodeURIComponent(target.id)}&missionName=${encodeURIComponent(target.name || "")}`);
+                    } else {
+                      router.push("/ai");
+                    }
                   }}
                 />
               ))}
@@ -249,8 +259,13 @@ export default function HomePage() {
         <MissionDetailsModal
           launch={activeModalLaunch}
           onClose={() => setActiveModalLaunch(null)}
-          onAskAi={() => {
-            router.push(`/ai?missionId=${encodeURIComponent(activeModalLaunch.id)}&missionName=${encodeURIComponent(activeModalLaunch.name)}`);
+          onAskAi={(targetLaunch) => {
+            const target = targetLaunch || activeModalLaunch;
+            if (target?.id) {
+              router.push(`/ai?missionId=${encodeURIComponent(target.id)}&missionName=${encodeURIComponent(target.name || "")}`);
+            } else {
+              router.push("/ai");
+            }
           }}
         />
       )}

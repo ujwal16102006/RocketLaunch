@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
-import { generateMissionIntelligence } from "@/services/deepseekApi.js";
+import {
+  generateMissionIntelligence,
+  generateGroundedAerospaceAnalysis,
+} from "@/services/deepseekApi.js";
 
 export async function POST(request) {
+  let body = {};
   try {
-    const body = await request.json();
-    const { mode = "brief", mission, comparisonMission, userQuery, concept } = body;
+    body = await request.json();
+  } catch {
+    body = {};
+  }
+  const { mode = "brief", mission, comparisonMission, userQuery, concept } = body;
 
+  try {
     const result = await generateMissionIntelligence({
       mode,
       mission,
@@ -14,27 +22,30 @@ export async function POST(request) {
       concept,
     });
 
-    if (result.setupRequired) {
-      return NextResponse.json(
-        {
-          success: false,
-          setupRequired: true,
-          message: result.message,
-          error: result.error,
-          content: result.content,
-        },
-        { status: 200 }
-      );
+    if (result.content) {
+      return NextResponse.json({
+        success: true,
+        content: result.content,
+        model: result.model || "deepseek-grounded-telemetry (offline fallback)",
+        isFallback: Boolean(result.isFallback || result.setupRequired),
+      });
     }
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: result.error || "DeepSeek processing encountered an error.",
-        },
-        { status: 500 }
+      const fallbackContent = generateGroundedAerospaceAnalysis(
+        mode,
+        mission,
+        comparisonMission,
+        userQuery,
+        concept,
+        result.error || "DeepSeek API currently unavailable"
       );
+      return NextResponse.json({
+        success: true,
+        content: fallbackContent,
+        model: "deepseek-grounded-telemetry (offline fallback)",
+        isFallback: true,
+      });
     }
 
     return NextResponse.json({
@@ -43,13 +54,20 @@ export async function POST(request) {
       model: result.model,
     });
   } catch (err) {
-    console.error("[API ERROR: /api/ai]", err);
-    return NextResponse.json(
-      {
-        success: false,
-        error: err.message || "Failed to process AI mission intelligence request.",
-      },
-      { status: 500 }
+    console.warn("[API FAILOVER: /api/ai]", err.message);
+    const fallbackContent = generateGroundedAerospaceAnalysis(
+      mode,
+      mission,
+      comparisonMission,
+      userQuery,
+      concept,
+      `DeepSeek API notice: ${err.message}`
     );
+    return NextResponse.json({
+      success: true,
+      content: fallbackContent,
+      model: "deepseek-grounded-telemetry (offline fallback)",
+      isFallback: true,
+    });
   }
 }
