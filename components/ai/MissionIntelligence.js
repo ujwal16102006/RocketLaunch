@@ -66,7 +66,13 @@ export function MissionIntelligence({ launches = [], initialMission = null }) {
 
       const data = await res.json();
 
-      if (data.setupRequired) {
+      if (data.content) {
+        setResult(data.content);
+        setError(null);
+        if (data.setupRequired) {
+          setSetupRequired(true);
+        }
+      } else if (data.setupRequired) {
         setSetupRequired(true);
         setError(data.message);
       } else if (!data.success) {

@@ -21,6 +21,7 @@ export async function POST(request) {
           setupRequired: true,
           message: result.message,
           error: result.error,
+          content: result.content,
         },
         { status: 200 }
       );

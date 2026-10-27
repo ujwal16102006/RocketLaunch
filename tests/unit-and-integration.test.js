@@ -152,16 +152,47 @@ test("FrameDiscovery: Discovers sequential frames and produces manifest", () => 
   assert.ok(res.lastFrame.includes("ezgif-frame-300.png"));
 });
 
-// 5. DeepSeek AI Security Tests
-await asyncTest("DeepSeek AI: Gracefully reports setupRequired when API key is unconfigured", async () => {
+// 5. DeepSeek AI Security & Offline Fallback Tests
+await asyncTest("DeepSeek AI: Gracefully reports setupRequired and provides grounded telemetry when API key is unconfigured", async () => {
   delete process.env.DEEPSEEK_API_KEY;
   const res = await generateMissionIntelligence({
     mode: "brief",
-    mission: { name: "Test Flight" },
+    mission: {
+      name: "Gaganyaan-1 Test Flight",
+      rocket: { name: "LVM3" },
+      agency: { name: "ISRO", countryCode: "IND" },
+      net: "2026-11-30T03:30:00Z",
+      pad: { name: "Second Launch Pad", locationName: "Sriharikota", latitude: "13.7199", longitude: "80.2305" },
+      mission: { orbit: { name: "Low Earth Orbit", abbrev: "LEO" }, description: "Test flight of crew module." }
+    },
   });
   assert.strictEqual(res.success, false);
   assert.strictEqual(res.setupRequired, true);
   assert.ok(res.error.includes("DEEPSEEK_API_KEY"));
+  assert.ok(res.content.includes("DeepSeek AI Service Notice: API Not Connected"));
+  assert.ok(res.content.includes("Gaganyaan-1 Test Flight"));
+  assert.ok(res.content.includes("ISRO"));
+  assert.ok(res.content.includes("IST"));
+});
+
+await asyncTest("DeepSeek AI: Synthesizes grounded aerospace telemetry and offline notice for Q&A (ask mode)", async () => {
+  delete process.env.DEEPSEEK_API_KEY;
+  const res = await generateMissionIntelligence({
+    mode: "ask",
+    userQuery: "What is the launch vehicle and target orbit for this flight?",
+    mission: {
+      name: "Starlink Group 15-16",
+      rocket: { name: "Falcon 9 Block 5" },
+      agency: { name: "SpaceX", countryCode: "USA" },
+      net: "2026-10-24T05:29:00Z",
+      pad: { name: "SLC-40", locationName: "Cape Canaveral SFS" },
+      mission: { orbit: { name: "Low Earth Orbit", abbrev: "LEO" }, description: "Starlink V2 Mini satellites" }
+    },
+  });
+  assert.ok(res.content.includes("DeepSeek AI Service Notice"));
+  assert.ok(res.content.includes("Falcon 9 Block 5"));
+  assert.ok(res.content.includes("SpaceX"));
+  assert.ok(res.content.includes("LEO"));
 });
 
 // 6. Rocket Image Resolver & De-duplication Tests

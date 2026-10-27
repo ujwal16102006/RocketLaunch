@@ -71,7 +71,10 @@ export default function MissionDossierPage({ params }) {
         body: JSON.stringify({ mode: "brief", mission: launch }),
       });
       const data = await res.json();
-      if (data.setupRequired) {
+      if (data.content) {
+        setBriefContent(data.content);
+        setBriefError(null);
+      } else if (data.setupRequired) {
         setBriefError(data.message);
       } else if (!data.success) {
         setBriefError(data.error);

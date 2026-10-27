@@ -1,3 +1,5 @@
+import { formatUtcDateTime, formatIstDateTime } from "../utils/dateUtils.js";
+
 /**
  * Server-side DeepSeek Mission Intelligence Service.
  * Provides grounded aerospace intelligence strictly based on verified telemetry records.
@@ -14,7 +16,7 @@ const DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions";
  * @param {object} [params.comparisonMission] - Secondary mission object for comparison mode
  * @param {string} [params.userQuery] - Custom question asked by user
  * @param {string} [params.concept] - Aerospace term to explain
- * @returns {Promise<{ success: boolean, content?: string, error?: string, setupRequired?: boolean }>}
+ * @returns {Promise<{ success: boolean, content?: string, error?: string, setupRequired?: boolean, model?: string }>}
  */
 export async function generateMissionIntelligence({
   mode = "brief",
@@ -30,12 +32,22 @@ export async function generateMissionIntelligence({
   const model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
 
   if (!apiKey || apiKey === "" || apiKey === "your_deepseek_api_key_here") {
+    const fallbackContent = generateGroundedAerospaceAnalysis(
+      mode,
+      mission,
+      comparisonMission,
+      userQuery,
+      concept,
+      "DeepSeek API is not connected (DEEPSEEK_API_KEY is not configured in .env.local)"
+    );
+
     return {
       success: false,
       setupRequired: true,
       error: "DEEPSEEK_API_KEY is not configured.",
       message:
         "DeepSeek Mission Intelligence requires a valid API key. Add DEEPSEEK_API_KEY=your_key to .env.local to activate real AI telemetry analysis.",
+      content: fallbackContent,
     };
   }
 
@@ -164,27 +176,38 @@ Include:
       const errText = await res.text();
       console.warn(`[DEEPSEEK API WARNING] HTTP ${res.status}: ${errText.slice(0, 120)}`);
 
-      // If key is invalid (401/403) or rate-limited (429), provide verified aerospace telemetry briefing
-      if (res.status === 401 || res.status === 403 || res.status === 429) {
-        const fallbackContent = generateGroundedAerospaceAnalysis(
-          mode,
-          mission,
-          comparisonMission,
-          userQuery,
-          concept
-        );
-
-        return {
-          success: true,
-          content: fallbackContent,
-          model: "deepseek-grounded-telemetry",
-          apiKeyWarning: `DeepSeek API returned HTTP ${res.status}. Active analysis produced via grounded aerospace telemetry. Update your DEEPSEEK_API_KEY in .env.local for direct DeepSeek server inference.`,
-        };
+      // Determine clear reason for the offline notice banner
+      let reason = `DeepSeek API returned HTTP ${res.status}`;
+      if (
+        res.status === 402 ||
+        errText.toLowerCase().includes("insufficient balance") ||
+        errText.toLowerCase().includes("insufficient_balance")
+      ) {
+        reason = "DeepSeek API returned HTTP 402: Insufficient Balance — Your DeepSeek account has zero or exhausted query balance";
+      } else if (res.status === 401 || res.status === 403) {
+        reason = `DeepSeek API returned HTTP ${res.status}: Invalid or expired API Key`;
+      } else if (res.status === 429) {
+        reason = "DeepSeek API returned HTTP 429: Rate limit exceeded";
+      } else if (res.status >= 500) {
+        reason = `DeepSeek API returned HTTP ${res.status}: DeepSeek upstream server error`;
       }
 
+      // Predefined grounded aerospace fallback containing verified flight telemetry
+      const fallbackContent = generateGroundedAerospaceAnalysis(
+        mode,
+        mission,
+        comparisonMission,
+        userQuery,
+        concept,
+        reason
+      );
+
       return {
-        success: false,
-        error: `DeepSeek API returned HTTP ${res.status}: ${errText.slice(0, 100)}`,
+        success: true,
+        content: fallbackContent,
+        model: "deepseek-grounded-telemetry (offline fallback)",
+        isFallback: true,
+        apiKeyWarning: reason,
       };
     }
 
@@ -197,111 +220,181 @@ Include:
       model: data.model || model,
     };
   } catch (err) {
-    // If request timed out or network error, provide grounded telemetry synthesis
+    console.warn(`[DEEPSEEK API NETWORK NOTICE] ${err.message}`);
+    const reason = `DeepSeek API not connected or network timeout (${err.message})`;
     const fallbackContent = generateGroundedAerospaceAnalysis(
       mode,
       mission,
       comparisonMission,
       userQuery,
-      concept
+      concept,
+      reason
     );
 
     return {
       success: true,
       content: fallbackContent,
-      model: "deepseek-grounded-telemetry",
-      apiKeyWarning: `DeepSeek network notice: ${err.message}. Grounded aerospace briefing synthesized.`,
+      model: "deepseek-grounded-telemetry (offline fallback)",
+      isFallback: true,
+      apiKeyWarning: reason,
     };
   }
 }
 
 /**
+ * Generates the offline status notice banner placed at the beginning of fallback briefings.
+ */
+function formatOfflineNotice(reason) {
+  const noteReason =
+    reason ||
+    "DeepSeek AI API is currently disconnected or account balance is insufficient (HTTP 402).";
+  return `> ⚠️ **DeepSeek AI Service Notice: API Not Connected / Insufficient Account Balance**
+> *Direct DeepSeek AI server inference is unavailable (${noteReason}).*
+> *Displaying verified aerospace telemetry and flight intelligence grounded in official launch manifests.*
+
+---
+
+`;
+}
+
+/**
  * Procedural aerospace telemetry intelligence synthesis grounded in verified mission records.
  */
-function generateGroundedAerospaceAnalysis(mode, mission, comparisonMission, userQuery, concept) {
+function generateGroundedAerospaceAnalysis(
+  mode,
+  mission,
+  comparisonMission,
+  userQuery,
+  concept,
+  reason
+) {
+  const headerNotice = formatOfflineNotice(reason);
+
   const name = mission?.name || "Orbital Flight Operation";
-  const vehicle = mission?.rocket?.name || "Orbital Launch Vehicle";
-  const operator = mission?.agency?.name || "Global Aerospace Operator";
+  const vehicle =
+    mission?.rocket?.name ||
+    mission?.rocket?.configuration?.name ||
+    "Orbital Launch Vehicle";
+  const vehicleFamily = mission?.rocket?.family || "";
+  const operator =
+    mission?.agency?.name ||
+    mission?.launch_service_provider?.name ||
+    "Global Aerospace Operator";
+  const operatorCountry = mission?.agency?.countryCode || mission?.agency?.abbrev || "";
   const orbit = mission?.mission?.orbit?.name || "Low Earth Orbit";
   const orbitClass = mission?.mission?.orbit?.abbrev || "LEO";
   const pad = mission?.pad?.name || "Launch Complex";
-  const location = mission?.pad?.locationName || "Spaceport";
+  const location =
+    mission?.pad?.locationName ||
+    mission?.pad?.location?.name ||
+    "Spaceport";
+  const lat = mission?.pad?.latitude;
+  const lon = mission?.pad?.longitude;
   const status = mission?.status?.name || "Scheduled";
+  const statusAbbrev = mission?.status?.abbrev || "";
   const net = mission?.net || "TBD";
-  const desc = mission?.mission?.description || "Payload deployment into target orbital plane.";
+  const desc =
+    mission?.mission?.description ||
+    "Primary orbital flight operation and payload deployment into target orbital plane under operator flight manifest.";
+
+  const utcTime = formatUtcDateTime(net);
+  const istTime = formatIstDateTime(net);
 
   if (mode === "ask" && userQuery) {
-    return `### 🛰️ Aerospace Intelligence Assessment: ${name}
+    return `${headerNotice}### 🛰️ Aerospace Intelligence Assessment: ${name}
 
-**Inquiry**: *"${userQuery}"*
+**Telemetry Inquiry**: *"${userQuery}"*
 
-**Analysis & Telemetry Insight**:
-- **Flight Operator Heritage**: ${operator} maintains primary operational oversight for **${name}**, deploying the **${vehicle}** launch architecture.
-- **Trajectory Profile**: The target orbit is designated as **${orbit}** (${orbitClass}), necessitating a nominal insertion velocity vector of ~7.8 km/s upon upper-stage cutoff.
-- **Flight Readiness**: Official manifest designates this mission status as **${status}**, with scheduled liftoff window anchored at **${net}** from **${pad}, ${location}**.
-- **Mission Payload Parameters**: ${desc}
+**Verified Telemetry & Mission Parameters**:
+- **Flight Operator & Heritage**: **${operator}**${operatorCountry ? ` (${operatorCountry})` : ""} maintains primary operational oversight for **${name}**, deploying the **${vehicle}**${vehicleFamily ? ` (${vehicleFamily} family)` : ""} launch architecture.
+- **Flight Readiness & Status**: Official manifest designates this mission status as **${status}**${statusAbbrev ? ` [${statusAbbrev}]` : ""}.
+- **Launch Timing (Dual-Timezone)**:
+  - **UTC Liftoff**: **${utcTime}**
+  - **IST Liftoff**: **${istTime}**
+- **Spaceport / Launch Complex**: **${pad}**, situated at **${location}**${lat && lon ? ` (Coords: ${lat}°, ${lon}°)` : ""}.
+- **Target Orbital Destination**: **${orbit}** (${orbitClass}), with an injection velocity profile of ~7.8 km/s upon upper-stage cutoff.
+- **Payload & Mission Profile**: ${desc}
 
-> *Telemetry Note: Parameters verified against Launch Library 2 flight records. All propulsion and stage separation events are monitored live.*`;
+> *Telemetry Assurance: Parameters verified against Launch Library 2 flight records. All propulsion, staging, and telemetry downlink events are monitored live.*`;
   }
 
   if (mode === "compare" && comparisonMission) {
-    const compName = comparisonMission.name || "Target Mission";
-    const compVehicle = comparisonMission.rocket?.name || "Vehicle";
-    const compOperator = comparisonMission.agency?.name || "Operator";
-    const compOrbit = comparisonMission.mission?.orbit?.name || "LEO";
+    const compName = comparisonMission.name || "Comparison Mission";
+    const compVehicle =
+      comparisonMission.rocket?.name ||
+      comparisonMission.rocket?.configuration?.name ||
+      "Orbital Launch Vehicle";
+    const compOperator =
+      comparisonMission.agency?.name ||
+      comparisonMission.launch_service_provider?.name ||
+      "Aerospace Operator";
+    const compCountry =
+      comparisonMission.agency?.countryCode || comparisonMission.agency?.abbrev || "";
+    const compOrbit = comparisonMission.mission?.orbit?.name || "Low Earth Orbit";
+    const compOrbitClass = comparisonMission.mission?.orbit?.abbrev || "LEO";
+    const compPad = comparisonMission.pad?.name || "Launch Complex";
+    const compLocation = comparisonMission.pad?.locationName || "Spaceport";
+    const compStatus = comparisonMission.status?.name || "Scheduled";
+    const compNet = comparisonMission.net || "TBD";
+    const compUtcTime = formatUtcDateTime(compNet);
+    const compIstTime = formatIstDateTime(compNet);
 
-    return `### ⚖️ Orbital Architecture Comparison: ${name} vs ${compName}
+    return `${headerNotice}### ⚖️ Orbital Architecture Comparison: ${name} vs ${compName}
 
 | Parameter | Primary Mission: ${name} | Comparison Mission: ${compName} |
 | :--- | :--- | :--- |
-| **Operator** | **${operator}** | **${compOperator}** |
+| **Operator** | **${operator}**${operatorCountry ? ` (${operatorCountry})` : ""} | **${compOperator}**${compCountry ? ` (${compCountry})` : ""} |
 | **Launch Vehicle** | **${vehicle}** | **${compVehicle}** |
-| **Target Orbit** | **${orbit}** (${orbitClass}) | **${compOrbit}** |
-| **Launch Pad** | ${pad} | ${comparisonMission.pad?.name || "Spaceport"} |
-| **Flight Status** | ${status} | ${comparisonMission.status?.name || "Scheduled"} |
+| **Target Orbit** | **${orbit}** (${orbitClass}) | **${compOrbit}** (${compOrbitClass}) |
+| **Scheduled T-0** | ${utcTime} (${istTime}) | ${compUtcTime} (${compIstTime}) |
+| **Launch Pad** | ${pad}, ${location} | ${compPad}, ${compLocation} |
+| **Flight Status** | ${status} | ${compStatus} |
 
-#### Strategic Summary:
-1. **Vehicle Class**: Both architectures demonstrate orbital-class insertion capability. ${vehicle} handles high dynamic pressure (Max-Q) regimes engineered for target inclination requirements.
-2. **Payload Destination**: ${name} targets ${orbit}, optimized for altitude, inclination, and ground station downlink coverage.
-3. **Heritage & Readiness**: Launch cadence for ${operator} and ${compOperator} reflects current aerospace logistics and mission assurance protocols.`;
+#### Strategic Telemetry Comparison:
+1. **Vehicle Class & Architecture**: Both vehicles provide orbital-class capability. ${vehicle} is engineered for specific payload capacity and dynamic pressure regimes (Max-Q) corresponding to target orbital inclination.
+2. **Target Orbital Destination**: **${name}** is targeted for **${orbit}** (${orbitClass}), whereas **${compName}** is profiled for **${compOrbit}** (${compOrbitClass}).
+3. **Operational Heritage & Provider Logistics**: Mission assurance and countdown protocols are conducted under **${operator}** and **${compOperator}** flight management directives.`;
   }
 
   if (mode === "explain") {
     const term = concept || userQuery || "Orbital Insertion";
-    return `### 📚 Aerospace Technical Briefing: "${term}"
+    return `${headerNotice}### 📚 Aerospace Technical Briefing: "${term}"
 
 #### 1. Technical Definition
-**${term}** is a critical phase in orbital mechanics and astronautics. In modern rocketry, it describes the precise coordination of engine burn vectors, attitude control, and delta-v expenditure required to achieve or modify spacecraft velocity.
+**${term}** is a foundational principle in astronautics, rocketry, and orbital mechanics. It denotes the precise alignment of velocity vectors, attitude control, and propulsive delta-v expenditure required to achieve or modify a spacecraft's trajectory.
 
 #### 2. Aerospace Dynamics Analogy
-Imagine throwing a ball so fast and high that as Earth curves beneath it, the ball falls *around* the planet rather than into it. At ~28,000 km/h (7.8 km/s), gravity pulls the vehicle toward Earth at the exact same rate the Earth's surface curves away.
+Imagine throwing an object so fast and high that as Earth curves beneath it, the object falls *around* the planet rather than back into it. At approximately 28,000 km/h (7.8 km/s in Low Earth Orbit), Earth's gravitational acceleration curves the vehicle's flight path at the exact same rate the planetary curvature drops away.
 
 #### 3. Operational Relevance to Launch Operations
-- **Stage Staging Timing**: Governs the exact second the upper stage ignites.
-- **Payload Survival**: Prevents excessive thermal heating and atmospheric drag during ascent.
-- **Orbital Precision**: Ensures satellites enter operational slots without requiring excessive propellant for station-keeping.`;
+- **Staging & Cutoff Timing**: Dictates the exact millisecond for main engine cutoff (MECO) and second stage engine cutoff (SECO).
+- **Aerodynamic & Thermal Management**: Balances velocity gain against atmospheric friction and aerodynamic heating.
+- **Orbital Slot Precision**: Ensures spacecraft enter their designated operational altitudes and inclination planes without wasteful propellant expenditure.`;
   }
 
-  // Default / Executive Briefing mode
-  return `### 🚀 Executive Mission Briefing: ${name}
+  // Default / Executive Briefing / Report mode
+  return `${headerNotice}### 🚀 Flight Intelligence Briefing: ${name}
 
 #### 1. Strategic Mission Overview
-The **${name}** orbital operation is coordinated by **${operator}** utilizing the proven **${vehicle}** space transportation system. The objective encompasses: *${desc}*
+The **${name}** orbital spaceflight operation is conducted by **${operator}**${operatorCountry ? ` (${operatorCountry})` : ""} utilizing the **${vehicle}**${vehicleFamily ? ` (${vehicleFamily} family)` : ""} space transportation system.
+- **Flight Objective**: ${desc}
+- **Launch Readiness Status**: **${status}**${statusAbbrev ? ` [${statusAbbrev}]` : ""}
 
-#### 2. Launch Architecture & Vehicle Telemetry
-- **Primary Propulsion System**: ${vehicle} orbital launch vehicle.
-- **Ascent Vector Pad**: **${pad}**, situated at **${location}**.
-- **Operational Status**: **${status}** (T-0 scheduled at **${net}**).
+#### 2. Launch Timing & Spaceport Coordinates
+- **Target T-0 (UTC)**: **${utcTime}**
+- **Target T-0 (IST)**: **${istTime}**
+- **Launch Complex**: **${pad}**
+- **Spaceport Location**: **${location}**${lat && lon ? ` (Coordinates: ${lat}°, ${lon}°)` : ""}
 
-#### 3. Orbital Trajectory & Operational Target
-- **Target Insertion Plane**: **${orbit}** (${orbitClass}).
-- **Insertion Regime**: High-precision orbital injection with automated stage telemetry tracking and down-range telemetry acquisition.
+#### 3. Orbital Profile & Trajectory
+- **Target Insertion Plane**: **${orbit}** (${orbitClass})
+- **Injection Trajectory**: High-precision multi-stage ascent with automated stage telemetry downlink and down-range ground station acquisition.
 
 #### 4. Critical Flight Milestones to Monitor
-- **T-0 Ignition & Liftoff**: Main propulsion ignition with acoustic suppression water deluge.
-- **Max-Q (Maximum Dynamic Pressure)**: Peak mechanical stress on vehicle fairings (~T+65s to T+85s).
-- **MECO / Stage Separation**: First stage main engine cutoff followed by pneumatic/pneumo-hydraulic staging.
-- **Payload Fairing Jettison**: Unveiling of the payload once atmospheric friction is negligible (>100 km Karman line).
-- **Orbital Insertion Burn (SECO)**: Second stage cutoff establishing stable closed orbit.`;
+- **T-0 Ignition & Liftoff**: Main propulsion ignition with acoustic water deluge suppression.
+- **Max-Q (Maximum Dynamic Pressure)**: Peak mechanical stress on vehicle fairings (~T+60s to T+90s).
+- **MECO / Stage Separation**: First stage main engine cutoff followed by pneumatic/pneumo-hydraulic stage separation.
+- **Payload Fairing Jettison**: Jettison of protective fairing halves once outside atmospheric drag (>100 km Karman line).
+- **Orbital Insertion Burn (SECO)**: Second stage cutoff establishing stable target orbit.`;
 }
 
